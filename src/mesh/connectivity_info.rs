@@ -10,26 +10,26 @@ pub(crate) struct ConnectivityInfo<T> {
 }
 
 impl<T> ConnectivityInfo<T> {
-    pub fn new(no_vertices: usize, no_faces: usize) -> ConnectivityInfo<T>
+    pub fn new(num_vertices: usize, num_faces: usize) -> ConnectivityInfo<T>
     {
         ConnectivityInfo {
-            vertices: RefCell::new(IDMap::with_capacity(no_vertices)),
-            halfedges: RefCell::new(IDMap::with_capacity(4 * no_faces)),
-            faces: RefCell::new(IDMap::with_capacity(no_faces))
+            vertices: RefCell::new(IDMap::with_capacity(num_vertices)),
+            halfedges: RefCell::new(IDMap::with_capacity(4 * num_faces)),
+            faces: RefCell::new(IDMap::with_capacity(num_faces))
         }
     }
 
-    pub fn no_vertices(&self) -> usize
+    pub fn num_vertices(&self) -> usize
     {
         RefCell::borrow(&self.vertices).len()
     }
 
-    pub fn no_halfedges(&self) -> usize
+    pub fn num_halfedges(&self) -> usize
     {
         RefCell::borrow(&self.halfedges).len()
     }
 
-    pub fn no_faces(&self) -> usize
+    pub fn num_faces(&self) -> usize
     {
         RefCell::borrow(&self.faces).len()
     }

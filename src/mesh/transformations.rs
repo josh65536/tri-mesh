@@ -47,6 +47,13 @@ impl<T: Clone> Mesh<T>
         }
     }
 
+    /// Copies and scales the entire mesh by multiplying `scale` to each vertex position.
+    pub fn scaled(&self, scale: f64) -> Self {
+        let mut res = self.clone();
+        res.scale(scale);
+        res
+    }
+
     /// Scales the entire mesh by multiplying `scale_x` to the x component of each vertex position, `scale_y` to the y component and `scale_z` to the z component.
     ///
     /// # Examples
@@ -76,6 +83,13 @@ impl<T: Clone> Mesh<T>
         }
     }
 
+    /// Copies and scales the entire mesh by multiplying `scale_x` to the x component of each vertex position, `scale_y` to the y component and `scale_z` to the z component.
+    pub fn non_uniform_scaled(&self, scale_x: f64, scale_y: f64, scale_z: f64) -> Self {
+        let mut res = self.clone();
+        res.non_uniform_scale(scale_x, scale_y, scale_z);
+        res
+    }
+
     /// Translates the entire mesh by applying the `translation` to each vertex position.
     ///
     /// # Examples
@@ -100,6 +114,13 @@ impl<T: Clone> Mesh<T>
         for vertex_id in self.vertex_iter() {
             self.move_vertex_by(vertex_id, translation);
         }
+    }
+
+    /// Copies and translates the entire mesh by applying the `translation` to each vertex position.
+    pub fn translated(&self, translation: Vec3) -> Self {
+        let mut res = self.clone();
+        res.translate(translation);
+        res
     }
 
     ///
@@ -130,6 +151,13 @@ impl<T: Clone> Mesh<T>
         }
     }
 
+    /// Copies and rotates the entire mesh by applying the given `rotation` to each vertex position.
+    pub fn rotated(&self, rotation: Mat3) -> Self {
+        let mut res = self.clone();
+        res.rotate(rotation);
+        res
+    }
+
     ///
     /// Transforms the entire mesh by applying the `transformation` to each vertex position.
     ///
@@ -157,5 +185,12 @@ impl<T: Clone> Mesh<T>
             let p_new = (transformation * p.extend(1.0)).truncate();
             self.move_vertex_to(vertex_id, p_new);
         }
+    }
+
+    /// Copies and transforms the entire mesh by applying the `transformation` to each vertex position.
+    pub fn transformed(&self, transformation: Mat4) -> Self {
+        let mut res = self.clone();
+        res.apply_transformation(transformation);
+        res
     }
 }

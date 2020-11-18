@@ -375,9 +375,9 @@ mod tests {
 
         let sub_mesh = mesh.clone_subset(&|_, face_id| faces.contains(&face_id));
 
-        assert_eq!(sub_mesh.no_faces(), 1);
-        assert_eq!(sub_mesh.no_halfedges(), 6);
-        assert_eq!(sub_mesh.no_vertices(), 3);
+        assert_eq!(sub_mesh.num_faces(), 1);
+        assert_eq!(sub_mesh.num_halfedges(), 6);
+        assert_eq!(sub_mesh.num_vertices(), 3);
         mesh.is_valid().unwrap();
         sub_mesh.is_valid().unwrap();
     }
@@ -403,8 +403,8 @@ mod tests {
         m1.is_valid().unwrap();
         m2.is_valid().unwrap();
 
-        assert_eq!(m1.no_faces(), 2);
-        assert_eq!(m2.no_faces(), 2);
+        assert_eq!(m1.num_faces(), 2);
+        assert_eq!(m2.num_faces(), 2);
     }
 
     #[test]
@@ -429,8 +429,8 @@ mod tests {
         mesh1.is_valid().unwrap();
         mesh2.is_valid().unwrap();
 
-        assert_eq!(m1.no_faces(), 2);
-        assert_eq!(m1.no_vertices(), 4);
+        assert_eq!(m1.num_faces(), 2);
+        assert_eq!(m1.num_vertices(), 4);
 
         m1.is_valid().unwrap();
         m2.is_valid().unwrap();
@@ -458,8 +458,8 @@ mod tests {
         mesh1.is_valid().unwrap();
         mesh2.is_valid().unwrap();
 
-        assert_eq!(m1.no_faces(), 4);
-        assert_eq!(m1.no_vertices(), 6);
+        assert_eq!(m1.num_faces(), 4);
+        assert_eq!(m1.num_vertices(), 6);
 
         m1.is_valid().unwrap();
         m2.is_valid().unwrap();
@@ -476,8 +476,8 @@ mod tests {
         assert_eq!(meshes1.len(), 2);
         assert_eq!(meshes2.len(), 2);
 
-        let mut m1 = if meshes1[0].no_faces() > meshes1[1].no_faces() { meshes1[0].clone() } else { meshes1[1].clone() };
-        let m2 = if meshes2[0].no_faces() > meshes2[1].no_faces() { meshes2[0].clone() } else { meshes2[1].clone() };
+        let mut m1 = if meshes1[0].num_faces() > meshes1[1].num_faces() { meshes1[0].clone() } else { meshes1[1].clone() };
+        let m2 = if meshes2[0].num_faces() > meshes2[1].num_faces() { meshes2[0].clone() } else { meshes2[1].clone() };
 
         m1.is_valid().unwrap();
         m2.is_valid().unwrap();
@@ -515,8 +515,8 @@ mod tests {
         assert_eq!(meshes1.len(), 2);
         assert_eq!(meshes2.len(), 2);
 
-        let mut m1 = if meshes1[0].no_faces() > meshes1[1].no_faces() { meshes1[0].clone() } else { meshes1[1].clone() };
-        let m2 = if meshes2[0].no_faces() > meshes2[1].no_faces() { meshes2[0].clone() } else { meshes2[1].clone() };
+        let mut m1 = if meshes1[0].num_faces() > meshes1[1].num_faces() { meshes1[0].clone() } else { meshes1[1].clone() };
+        let m2 = if meshes2[0].num_faces() > meshes2[1].num_faces() { meshes2[0].clone() } else { meshes2[1].clone() };
 
         m1.is_valid().unwrap();
         m2.is_valid().unwrap();
@@ -657,13 +657,13 @@ mod tests {
         let mut stitches = Vec::new();
         let (new_edges1, new_edges2) = split_at_intersections(&mut mesh1, &mut mesh2, &intersections, &mut stitches).unwrap();
 
-        assert_eq!(mesh1.no_vertices(), 11);
-        assert_eq!(mesh1.no_halfedges(), 12 * 3 + 8);
-        assert_eq!(mesh1.no_faces(), 12);
+        assert_eq!(mesh1.num_vertices(), 11);
+        assert_eq!(mesh1.num_halfedges(), 12 * 3 + 8);
+        assert_eq!(mesh1.num_faces(), 12);
 
-        assert_eq!(mesh2.no_vertices(), 11);
-        assert_eq!(mesh2.no_halfedges(), 12 * 3 + 8);
-        assert_eq!(mesh2.no_faces(), 12);
+        assert_eq!(mesh2.num_vertices(), 11);
+        assert_eq!(mesh2.num_halfedges(), 12 * 3 + 8);
+        assert_eq!(mesh2.num_faces(), 12);
 
         assert_eq!(new_edges1.len(), 8);
         assert_eq!(new_edges2.len(), 8);
@@ -685,13 +685,13 @@ mod tests {
         let mut stitches = Vec::new();
         let (new_edges1, new_edges2) = split_at_intersections(&mut mesh1, &mut mesh2, &intersections, &mut stitches).unwrap();
 
-        assert_eq!(mesh1.no_vertices(), 14);
-        assert_eq!(mesh1.no_faces(), 19);
-        assert_eq!(mesh1.no_halfedges(), 19 * 3 + 7);
+        assert_eq!(mesh1.num_vertices(), 14);
+        assert_eq!(mesh1.num_faces(), 19);
+        assert_eq!(mesh1.num_halfedges(), 19 * 3 + 7);
 
-        assert_eq!(mesh2.no_vertices(), 14);
-        assert_eq!(mesh2.no_faces(), 19);
-        assert_eq!(mesh2.no_halfedges(), 19 * 3 + 7);
+        assert_eq!(mesh2.num_vertices(), 14);
+        assert_eq!(mesh2.num_faces(), 19);
+        assert_eq!(mesh2.num_halfedges(), 19 * 3 + 7);
 
         assert_eq!(new_edges1.len(), 19);
         assert_eq!(new_edges2.len(), 19);
@@ -720,9 +720,9 @@ mod tests {
         let mut stitches = Vec::new();
         let (new_edges1, new_edges2) = split_at_intersections(&mut mesh1, &mut mesh2, &intersections, &mut stitches).unwrap();
 
-        assert_eq!(mesh1.no_vertices(), 5);
-        assert_eq!(mesh1.no_faces(), 5);
-        assert_eq!(mesh1.no_halfedges(), 5 * 3 + 3);
+        assert_eq!(mesh1.num_vertices(), 5);
+        assert_eq!(mesh1.num_faces(), 5);
+        assert_eq!(mesh1.num_halfedges(), 5 * 3 + 3);
 
         let mut area_test1 = 0.0;
         for face_id in mesh1.face_iter() {
@@ -730,9 +730,9 @@ mod tests {
         }
         assert!((area1 - area_test1).abs() < 0.001);
 
-        assert_eq!(mesh2.no_vertices(), 5);
-        assert_eq!(mesh2.no_faces(), 3);
-        assert_eq!(mesh2.no_halfedges(), 3 * 3 + 5);
+        assert_eq!(mesh2.num_vertices(), 5);
+        assert_eq!(mesh2.num_faces(), 3);
+        assert_eq!(mesh2.num_halfedges(), 3 * 3 + 5);
 
         assert_eq!(new_edges1.len(), 6);
         assert_eq!(new_edges2.len(), 2);
@@ -759,13 +759,13 @@ mod tests {
         let mut stitches = Vec::new();
         let (new_edges1, new_edges2) = split_at_intersections(&mut mesh1, &mut mesh2, &intersections, &mut stitches).unwrap();
 
-        assert_eq!(mesh1.no_vertices(), 5);
-        assert_eq!(mesh1.no_faces(), 3);
-        assert_eq!(mesh1.no_halfedges(), 3 * 3 + 5);
+        assert_eq!(mesh1.num_vertices(), 5);
+        assert_eq!(mesh1.num_faces(), 3);
+        assert_eq!(mesh1.num_halfedges(), 3 * 3 + 5);
 
-        assert_eq!(mesh2.no_vertices(), 5);
-        assert_eq!(mesh2.no_faces(), 3);
-        assert_eq!(mesh2.no_halfedges(), 3 * 3 + 5);
+        assert_eq!(mesh2.num_vertices(), 5);
+        assert_eq!(mesh2.num_faces(), 3);
+        assert_eq!(mesh2.num_halfedges(), 3 * 3 + 5);
 
         assert_eq!(new_edges1.len(), 2);
         assert_eq!(new_edges2.len(), 2);
@@ -787,8 +787,8 @@ mod tests {
 
         mesh1.split_primitives_at_intersection(&mut mesh2);
 
-        assert_eq!(mesh1.no_vertices(), 5);
-        assert_eq!(mesh2.no_vertices(), 5);
+        assert_eq!(mesh1.num_vertices(), 5);
+        assert_eq!(mesh2.num_vertices(), 5);
 
         mesh1.is_valid().unwrap();
         mesh2.is_valid().unwrap();
@@ -802,8 +802,8 @@ mod tests {
 
         mesh1.split_primitives_at_intersection( &mut mesh2);
 
-        assert_eq!(mesh1.no_vertices(), 14);
-        assert_eq!(mesh2.no_vertices(), 14);
+        assert_eq!(mesh1.num_vertices(), 14);
+        assert_eq!(mesh2.num_vertices(), 14);
 
         mesh1.is_valid().unwrap();
         mesh2.is_valid().unwrap();

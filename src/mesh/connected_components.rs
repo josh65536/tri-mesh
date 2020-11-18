@@ -72,7 +72,7 @@ mod tests {
     {
         let mesh = create_connected_test_object();
         let cc = mesh.connected_component(mesh.face_iter().next().unwrap());
-        assert_eq!(cc.len(), mesh.no_faces());
+        assert_eq!(cc.len(), mesh.num_faces());
     }
 
     #[test]

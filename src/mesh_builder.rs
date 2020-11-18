@@ -62,8 +62,8 @@ impl<T: Clone + Default> MeshBuilder<T> {
     /// let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
     /// let mesh = MeshBuilder::<()>::new().with_indices(indices).with_positions(positions).build()?;
     ///
-    /// assert_eq!(mesh.no_faces(), 3);
-    /// assert_eq!(mesh.no_vertices(), 4);
+    /// assert_eq!(mesh.num_faces(), 3);
+    /// assert_eq!(mesh.num_vertices(), 4);
     ///
     /// #   mesh.is_valid().unwrap();
     /// #   Ok(())
@@ -89,8 +89,8 @@ impl<T: Clone + Default> MeshBuilder<T> {
     /// let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
     /// let mesh = MeshBuilder::new().with_indices(indices).with_tags(tags).with_positions(positions).build()?;
     ///
-    /// assert_eq!(mesh.no_faces(), 3);
-    /// assert_eq!(mesh.no_vertices(), 4);
+    /// assert_eq!(mesh.num_faces(), 3);
+    /// assert_eq!(mesh.num_vertices(), 4);
     ///
     /// #   mesh.is_valid().unwrap();
     /// #   Ok(())
@@ -115,11 +115,11 @@ impl<T: Clone + Default> MeshBuilder<T> {
     /// let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
     /// let mesh = MeshBuilder::new().with_indices(indices).with_default_tag(1).with_positions(positions).build()?;
     ///
-    /// assert_eq!(mesh.no_faces(), 3);
+    /// assert_eq!(mesh.num_faces(), 3);
     /// for face_id in mesh.face_iter() {
     ///     assert_eq!(mesh.face_tag(face_id), 1);
     /// }
-    /// assert_eq!(mesh.no_vertices(), 4);
+    /// assert_eq!(mesh.num_vertices(), 4);
     ///
     /// #   mesh.is_valid().unwrap();
     /// #   Ok(())
@@ -148,8 +148,8 @@ impl<T: Clone + Default> MeshBuilder<T> {
     ///                                    0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5];
     /// let mesh = MeshBuilder::<()>::new().with_positions(positions).build()?;
     ///
-    /// assert_eq!(mesh.no_faces(), 3);
-    /// assert_eq!(mesh.no_vertices(), 9);
+    /// assert_eq!(mesh.num_faces(), 3);
+    /// assert_eq!(mesh.num_vertices(), 9);
     ///
     /// #   mesh.is_valid().unwrap();
     /// #   Ok(())
@@ -284,8 +284,8 @@ impl<T: Clone + Default> MeshBuilder<T> {
     /// # fn main() -> Result<(), Box<Error>> {
     /// let mesh = MeshBuilder::<()>::new().cube().build()?;
     ///
-    /// assert_eq!(mesh.no_faces(), 12);
-    /// assert_eq!(mesh.no_vertices(), 8);
+    /// assert_eq!(mesh.num_faces(), 12);
+    /// assert_eq!(mesh.num_vertices(), 8);
     ///
     /// #   mesh.is_valid().unwrap();
     /// #   Ok(())
@@ -488,8 +488,8 @@ mod tests {
 
         let mesh = MeshBuilder::<()>::new().with_obj(source).build().unwrap();
 
-        assert_eq!(mesh.no_faces(), 12);
-        assert_eq!(mesh.no_vertices(), 8);
+        assert_eq!(mesh.num_faces(), 12);
+        assert_eq!(mesh.num_vertices(), 8);
 
         mesh.is_valid().unwrap();
     }

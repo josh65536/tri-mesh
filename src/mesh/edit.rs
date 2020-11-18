@@ -350,7 +350,7 @@ mod tests {
     {
         let mut no_flips = 0;
         let mut mesh = MeshBuilder::<()>::new().square().build().unwrap();
-        let no_edges = mesh.no_halfedges();
+        let num_edges = mesh.num_halfedges();
         for halfedge_id in mesh.halfedge_iter() {
             let (v0, v1) = mesh.edge_vertices(halfedge_id);
 
@@ -374,7 +374,7 @@ mod tests {
                 no_flips = no_flips + 1;
             }
         }
-        assert_eq!(no_edges, mesh.no_halfedges());
+        assert_eq!(num_edges, mesh.num_halfedges());
         assert_eq!(no_flips, 2);
     }
 
@@ -383,7 +383,7 @@ mod tests {
     {
         let mut no_flips = 0;
         let mut mesh = MeshBuilder::<()>::new().icosahedron().build().unwrap();
-        let no_edges = mesh.no_halfedges();
+        let num_edges = mesh.num_halfedges();
         for halfedge_id in mesh.halfedge_iter() {
             let (v0, v1) = mesh.edge_vertices(halfedge_id);
 
@@ -407,7 +407,7 @@ mod tests {
                 no_flips = no_flips + 1;
             }
         }
-        assert_eq!(no_edges, mesh.no_halfedges());
+        assert_eq!(num_edges, mesh.num_halfedges());
         assert!(no_flips > 0);
     }
 
@@ -421,9 +421,9 @@ mod tests {
             {
                 mesh.split_edge(halfedge_id, vec3(-1.0, -1.0, -1.0));
 
-                assert_eq!(mesh.no_vertices(), 4);
-                assert_eq!(mesh.no_halfedges(), 2 * 3 + 4);
-                assert_eq!(mesh.no_faces(), 2);
+                assert_eq!(mesh.num_vertices(), 4);
+                assert_eq!(mesh.num_halfedges(), 2 * 3 + 4);
+                assert_eq!(mesh.num_faces(), 2);
 
                 let mut walker = mesh.walker_from_halfedge(halfedge_id);
                 assert!(walker.halfedge_id().is_some());
@@ -461,9 +461,9 @@ mod tests {
             if walker.face_id().is_some() && walker.as_twin().face_id().is_some()
             {
                 let vertex_id = mesh.split_edge(halfedge_id, vec3(-1.0, -1.0, -1.0));
-                assert_eq!(mesh.no_vertices(), 5);
-                assert_eq!(mesh.no_halfedges(), 4 * 3 + 4);
-                assert_eq!(mesh.no_faces(), 4);
+                assert_eq!(mesh.num_vertices(), 5);
+                assert_eq!(mesh.num_halfedges(), 4 * 3 + 4);
+                assert_eq!(mesh.num_faces(), 4);
 
                 let mut w = mesh.walker_from_vertex(vertex_id);
                 let start_halfedge_id = w.halfedge_id();
@@ -492,9 +492,9 @@ mod tests {
 
         let vertex_id = mesh.split_face(face_id, vec3(-1.0, -1.0, -1.0));
 
-        assert_eq!(mesh.no_vertices(), 4);
-        assert_eq!(mesh.no_halfedges(), 3 * 3 + 3);
-        assert_eq!(mesh.no_faces(), 3);
+        assert_eq!(mesh.num_vertices(), 4);
+        assert_eq!(mesh.num_halfedges(), 3 * 3 + 3);
+        assert_eq!(mesh.num_faces(), 3);
 
         let mut walker = mesh.walker_from_vertex(vertex_id);
         let start_edge = walker.halfedge_id().unwrap();
@@ -528,9 +528,9 @@ mod tests {
             {
                 mesh.collapse_edge(halfedge_id);
 
-                assert_eq!(mesh.no_vertices(), 4);
-                assert_eq!(mesh.no_halfedges(), 10);
-                assert_eq!(mesh.no_faces(), 2);
+                assert_eq!(mesh.num_vertices(), 4);
+                assert_eq!(mesh.num_halfedges(), 10);
+                assert_eq!(mesh.num_faces(), 2);
 
                 mesh.is_valid().unwrap();
 
@@ -551,9 +551,9 @@ mod tests {
             {
                 mesh.collapse_edge(halfedge_id);
 
-                assert_eq!(mesh.no_vertices(), 3);
-                assert_eq!(mesh.no_halfedges(), 6);
-                assert_eq!(mesh.no_faces(), 1);
+                assert_eq!(mesh.num_vertices(), 3);
+                assert_eq!(mesh.num_halfedges(), 6);
+                assert_eq!(mesh.num_faces(), 1);
 
 
                 mesh.is_valid().unwrap();
@@ -571,9 +571,9 @@ mod tests {
             if !mesh.is_edge_on_boundary(halfedge_id)
             {
                 mesh.collapse_edge(halfedge_id);
-                assert_eq!(mesh.no_vertices(), 3);
-                assert_eq!(mesh.no_halfedges(), 6);
-                assert_eq!(mesh.no_faces(), 1);
+                assert_eq!(mesh.num_vertices(), 3);
+                assert_eq!(mesh.num_halfedges(), 6);
+                assert_eq!(mesh.num_faces(), 1);
 
                 mesh.is_valid().unwrap();
                 break;
@@ -588,7 +588,7 @@ mod tests {
         let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0,  1.0, 0.0, 1.0,  2.0, 0.0, 0.5];
         let mut mesh = Mesh::new(indices, vec![(); 3], positions);
 
-        while mesh.no_faces() > 1 {
+        while mesh.num_faces() > 1 {
             for halfedge_id in mesh.halfedge_iter() {
                 if mesh.is_edge_on_boundary(halfedge_id)
                 {
@@ -597,9 +597,9 @@ mod tests {
                 }
             }
         }
-        assert_eq!(mesh.no_vertices(), 3);
-        assert_eq!(mesh.no_halfedges(), 6);
-        assert_eq!(mesh.no_faces(), 1);
+        assert_eq!(mesh.num_vertices(), 3);
+        assert_eq!(mesh.num_halfedges(), 6);
+        assert_eq!(mesh.num_faces(), 1);
         mesh.is_valid().unwrap();
     }
 
@@ -614,9 +614,9 @@ mod tests {
 
         mesh.remove_face(faces[0]);
 
-        assert_eq!(3, mesh.no_vertices());
-        assert_eq!(6, mesh.no_halfedges());
-        assert_eq!(1, mesh.no_faces());
+        assert_eq!(3, mesh.num_vertices());
+        assert_eq!(6, mesh.num_halfedges());
+        assert_eq!(1, mesh.num_faces());
         mesh.is_valid().unwrap();
     }
 
@@ -629,9 +629,9 @@ mod tests {
 
         mesh.remove_face(face_id);
 
-        assert_eq!(3, mesh.no_vertices());
-        assert_eq!(6, mesh.no_halfedges());
-        assert_eq!(1, mesh.no_faces());
+        assert_eq!(3, mesh.num_vertices());
+        assert_eq!(6, mesh.num_halfedges());
+        assert_eq!(1, mesh.num_faces());
         mesh.is_valid().unwrap();
     }
 
@@ -644,9 +644,9 @@ mod tests {
 
         mesh.remove_face(face_id);
 
-        assert_eq!(4, mesh.no_vertices());
-        assert_eq!(10, mesh.no_halfedges());
-        assert_eq!(2, mesh.no_faces());
+        assert_eq!(4, mesh.num_vertices());
+        assert_eq!(10, mesh.num_halfedges());
+        assert_eq!(2, mesh.num_faces());
         mesh.is_valid().unwrap();
     }
 }

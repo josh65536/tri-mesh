@@ -181,9 +181,9 @@ mod tests {
 
         mesh.remove_lonely_primitives();
 
-        assert_eq!(3, mesh.no_vertices());
-        assert_eq!(6, mesh.no_halfedges());
-        assert_eq!(1, mesh.no_faces());
+        assert_eq!(3, mesh.num_vertices());
+        assert_eq!(6, mesh.num_halfedges());
+        assert_eq!(1, mesh.num_faces());
         mesh.is_valid().unwrap();
     }
 }

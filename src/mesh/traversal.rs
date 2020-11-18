@@ -113,7 +113,7 @@ impl<T: Clone> Mesh<T>
 ///     let p1 = mesh.vertex_position(walker.as_twin().vertex_id().unwrap());
 ///     avg_edge_length += (p0 - p1).magnitude();
 /// }
-/// avg_edge_length /= mesh.no_edges() as f64;
+/// avg_edge_length /= mesh.num_edges() as f64;
 /// ```
 ///
 #[derive(Clone, Debug)]

@@ -119,14 +119,14 @@ impl<T: Clone> Mesh<T>
 {
     pub(crate) fn new(indices: Vec<u32>, tags: Vec<T>, positions: Vec<f64>) -> Mesh<T>
     {
-        let no_vertices = positions.len()/3;
-        let no_faces = indices.len()/3;
+        let num_vertices = positions.len()/3;
+        let num_faces = indices.len()/3;
         let mut mesh = Mesh {
-            connectivity_info: ConnectivityInfo::new(no_vertices, no_faces)
+            connectivity_info: ConnectivityInfo::new(num_vertices, num_faces)
         };
 
         // Create vertices
-        for i in 0..no_vertices {
+        for i in 0..num_vertices {
             mesh.create_vertex(vec3(positions[i*3], positions[i*3+1], positions[i*3+2]));
         }
         
@@ -137,7 +137,7 @@ impl<T: Clone> Mesh<T>
         }
 
         // Create faces and twin connectivity
-        for (face, tag) in (0..no_faces).zip(tags.into_iter()) {
+        for (face, tag) in (0..num_faces).zip(tags.into_iter()) {
             let v0 = indices[face * 3];
             let v1 = indices[face * 3 + 1];
             let v2 = indices[face * 3 + 2];
@@ -174,27 +174,27 @@ impl<T: Clone> Mesh<T>
     }
 
     /// Returns the number of vertices in the mesh.
-    pub fn no_vertices(&self) -> usize
+    pub fn num_vertices(&self) -> usize
     {
-        self.connectivity_info.no_vertices()
+        self.connectivity_info.num_vertices()
     }
 
     /// Returns the number of edges in the mesh.
-    pub fn no_edges(&self) -> usize
+    pub fn num_edges(&self) -> usize
     {
-        self.connectivity_info.no_halfedges()/2
+        self.connectivity_info.num_halfedges()/2
     }
 
     /// Returns the number of half-edges in the mesh.
-    pub fn no_halfedges(&self) -> usize
+    pub fn num_halfedges(&self) -> usize
     {
-        self.connectivity_info.no_halfedges()
+        self.connectivity_info.num_halfedges()
     }
 
     /// Returns the number of faces in the mesh.
-    pub fn no_faces(&self) -> usize
+    pub fn num_faces(&self) -> usize
     {
-        self.connectivity_info.no_faces()
+        self.connectivity_info.num_faces()
     }
 
     /// Returns whether or not the mesh is closed, ie. contains no holes.
@@ -319,8 +319,8 @@ mod tests {
 
         let mesh = Mesh::new((0..9).collect(), vec![(); 3], positions);
 
-        assert_eq!(9, mesh.no_vertices());
-        assert_eq!(3, mesh.no_faces());
+        assert_eq!(9, mesh.num_vertices());
+        assert_eq!(3, mesh.num_faces());
         mesh.is_valid().unwrap();
     }
 

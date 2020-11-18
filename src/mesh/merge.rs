@@ -353,9 +353,9 @@ mod tests {
         let mut mesh = Mesh::new((0..9).collect(), vec![(); 3], positions);
         mesh.merge_overlapping_primitives().unwrap();
 
-        assert_eq!(4, mesh.no_vertices());
-        assert_eq!(12, mesh.no_halfedges());
-        assert_eq!(3, mesh.no_faces());
+        assert_eq!(4, mesh.num_vertices());
+        assert_eq!(12, mesh.num_halfedges());
+        assert_eq!(3, mesh.num_faces());
         mesh.is_valid().unwrap();
     }
 
@@ -365,9 +365,9 @@ mod tests {
         let mut mesh = MeshBuilder::<()>::new().unconnected_cube().build().unwrap();
         mesh.merge_overlapping_primitives().unwrap();
 
-        assert_eq!(8, mesh.no_vertices());
-        assert_eq!(36, mesh.no_halfedges());
-        assert_eq!(12, mesh.no_faces());
+        assert_eq!(8, mesh.num_vertices());
+        assert_eq!(36, mesh.num_halfedges());
+        assert_eq!(12, mesh.num_faces());
         mesh.is_valid().unwrap();
     }
 
@@ -381,9 +381,9 @@ mod tests {
         let mut mesh = Mesh::new((0..9).collect(), vec![(); 3], positions);
         mesh.merge_overlapping_primitives().unwrap();
 
-        assert_eq!(4, mesh.no_vertices());
-        assert_eq!(10, mesh.no_halfedges());
-        assert_eq!(2, mesh.no_faces());
+        assert_eq!(4, mesh.num_vertices());
+        assert_eq!(10, mesh.num_halfedges());
+        assert_eq!(2, mesh.num_faces());
         mesh.is_valid().unwrap();
     }
 
@@ -397,9 +397,9 @@ mod tests {
         let mut mesh = Mesh::new(indices, vec![(); 4], positions);
         mesh.merge_overlapping_primitives().unwrap();
 
-        assert_eq!(5, mesh.no_vertices());
-        assert_eq!(14, mesh.no_halfedges());
-        assert_eq!(3, mesh.no_faces());
+        assert_eq!(5, mesh.num_vertices());
+        assert_eq!(14, mesh.num_halfedges());
+        assert_eq!(3, mesh.num_faces());
         mesh.is_valid().unwrap();
     }
 
@@ -414,9 +414,9 @@ mod tests {
         let mut mesh = Mesh::new(indices, vec![(); 5], positions);
         mesh.merge_overlapping_primitives().unwrap();
 
-        assert_eq!(5, mesh.no_vertices());
-        assert_eq!(14, mesh.no_halfedges());
-        assert_eq!(3, mesh.no_faces());
+        assert_eq!(5, mesh.num_vertices());
+        assert_eq!(14, mesh.num_halfedges());
+        assert_eq!(3, mesh.num_faces());
         mesh.is_valid().unwrap();
     }
 
@@ -439,9 +439,9 @@ mod tests {
             }
         }
 
-        assert_eq!(5, mesh.no_vertices());
-        assert_eq!(12, mesh.no_halfedges());
-        assert_eq!(2, mesh.no_faces());
+        assert_eq!(5, mesh.num_vertices());
+        assert_eq!(12, mesh.num_halfedges());
+        assert_eq!(2, mesh.num_faces());
     }
 
     #[test]
@@ -468,9 +468,9 @@ mod tests {
             }
         }
 
-        assert_eq!(4, mesh.no_vertices());
-        assert_eq!(10, mesh.no_halfedges());
-        assert_eq!(2, mesh.no_faces());
+        assert_eq!(4, mesh.num_vertices());
+        assert_eq!(10, mesh.num_halfedges());
+        assert_eq!(2, mesh.num_faces());
     }
 
     #[test]
@@ -486,8 +486,8 @@ mod tests {
 
         mesh1.merge_with(&mesh2).unwrap();
 
-        assert_eq!(mesh1.no_faces(), 2);
-        assert_eq!(mesh1.no_vertices(), 4);
+        assert_eq!(mesh1.num_faces(), 2);
+        assert_eq!(mesh1.num_vertices(), 4);
 
         mesh1.is_valid().unwrap();
         mesh2.is_valid().unwrap();
@@ -506,8 +506,8 @@ mod tests {
 
         mesh1.merge_with(&mesh2).unwrap();
 
-        assert_eq!(mesh1.no_faces(), 2);
-        assert_eq!(mesh1.no_vertices(), 4);
+        assert_eq!(mesh1.num_faces(), 2);
+        assert_eq!(mesh1.num_vertices(), 4);
 
         mesh1.is_valid().unwrap();
         mesh2.is_valid().unwrap();
@@ -525,9 +525,9 @@ mod tests {
         mesh1.is_valid().unwrap();
         mesh2.is_valid().unwrap();
 
-        assert_eq!(mesh1.no_vertices(), mesh2.no_vertices() + 8);
-        assert_eq!(mesh1.no_halfedges(), mesh2.no_halfedges() + 36);
-        assert_eq!(mesh1.no_faces(), mesh2.no_faces() + 12);
+        assert_eq!(mesh1.num_vertices(), mesh2.num_vertices() + 8);
+        assert_eq!(mesh1.num_halfedges(), mesh2.num_halfedges() + 36);
+        assert_eq!(mesh1.num_faces(), mesh2.num_faces() + 12);
 
         for pos in mesh2.vertex_iter().map(|v| mesh2.vertex_position(v)) {
             assert!(mesh1.vertex_iter().find(|v| mesh1.vertex_position(*v) == pos).is_some());

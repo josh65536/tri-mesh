@@ -7,6 +7,7 @@ use crate::mesh::ids::*;
 /// # Face measures
 impl<T: Clone> Mesh<T>
 {
+    /// Returns the tag for a face
     pub fn face_tag(&self, face_id: FaceID) -> T {
         self.connectivity_info.face_tag(face_id)
     }
