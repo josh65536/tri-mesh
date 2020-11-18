@@ -30,21 +30,24 @@ impl From<bincode::Error> for Error {
 }
 
 ///
-/// `MeshBuilder` contains functionality to build a mesh from either raw data (indices, positions, normals)
+/// `MeshBuilder` contains functionality to build a mesh from either raw data (indices, positions)
 /// or from simple geometric shapes (box, icosahedron, cylinder, ..) or from file source (.obj).
+/// A tag can optionally be set for each face.
 ///
 #[derive(Debug, Default)]
-pub struct MeshBuilder {
+pub struct MeshBuilder<T> {
     indices: Option<Vec<u32>>,
-    positions: Option<Vec<f64>>
+    tags: Option<Vec<T>>,
+    default_tag: Option<T>,
+    positions: Option<Vec<f64>>,
 }
 
-impl MeshBuilder {
+impl<T: Clone + Default> MeshBuilder<T> {
 
     /// Creates a new [MeshBuilder](crate::mesh_builder::MeshBuilder) instance.
     pub fn new() -> Self
     {
-        MeshBuilder {indices: None, positions: None}
+        MeshBuilder {indices: None, tags: None, default_tag: None, positions: None}
     }
 
     ///
@@ -57,7 +60,7 @@ impl MeshBuilder {
     /// # fn main() -> Result<(), Box<Error>> {
     /// let indices: Vec<u32> = vec![0, 1, 2,  0, 2, 3,  0, 3, 1];
     /// let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
-    /// let mesh = MeshBuilder::new().with_indices(indices).with_positions(positions).build()?;
+    /// let mesh = MeshBuilder::<()>::new().with_indices(indices).with_positions(positions).build()?;
     ///
     /// assert_eq!(mesh.no_faces(), 3);
     /// assert_eq!(mesh.no_vertices(), 4);
@@ -70,6 +73,62 @@ impl MeshBuilder {
     pub fn with_indices(mut self, indices: Vec<u32>) -> Self
     {
         self.indices = Some(indices);
+        self
+    }
+
+    ///
+    /// Set the tags of each face.
+    ///
+    /// # Examples
+    /// ```
+    /// # use tri_mesh::mesh_builder::{MeshBuilder, Error};
+    /// #
+    /// # fn main() -> Result<(), Box<Error>> {
+    /// let indices: Vec<u32> = vec![0, 1, 2,  0, 2, 3,  0, 3, 1];
+    /// let tags: Vec<u32>  = vec![0, 0, 1];
+    /// let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
+    /// let mesh = MeshBuilder::new().with_indices(indices).with_tags(tags).with_positions(positions).build()?;
+    ///
+    /// assert_eq!(mesh.no_faces(), 3);
+    /// assert_eq!(mesh.no_vertices(), 4);
+    ///
+    /// #   mesh.is_valid().unwrap();
+    /// #   Ok(())
+    /// # }
+    /// ```
+    ///
+    pub fn with_tags(mut self, tags: Vec<T>) -> Self
+    {
+        self.tags = Some(tags);
+        self
+    }
+
+    ///
+    /// Set the tags of each face.
+    ///
+    /// # Examples
+    /// ```
+    /// # use tri_mesh::mesh_builder::{MeshBuilder, Error};
+    /// #
+    /// # fn main() -> Result<(), Box<Error>> {
+    /// let indices: Vec<u32> = vec![0, 1, 2,  0, 2, 3,  0, 3, 1];
+    /// let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
+    /// let mesh = MeshBuilder::new().with_indices(indices).with_default_tag(1).with_positions(positions).build()?;
+    ///
+    /// assert_eq!(mesh.no_faces(), 3);
+    /// for face_id in mesh.face_iter() {
+    ///     assert_eq!(mesh.face_tag(face_id), 1);
+    /// }
+    /// assert_eq!(mesh.no_vertices(), 4);
+    ///
+    /// #   mesh.is_valid().unwrap();
+    /// #   Ok(())
+    /// # }
+    /// ```
+    ///
+    pub fn with_default_tag(mut self, tag: T) -> Self
+    {
+        self.default_tag = Some(tag);
         self
     }
 
@@ -87,7 +146,7 @@ impl MeshBuilder {
     /// let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
     ///                                    0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
     ///                                    0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5];
-    /// let mesh = MeshBuilder::new().with_positions(positions).build()?;
+    /// let mesh = MeshBuilder::<()>::new().with_positions(positions).build()?;
     ///
     /// assert_eq!(mesh.no_faces(), 3);
     /// assert_eq!(mesh.no_vertices(), 9);
@@ -112,7 +171,7 @@ impl MeshBuilder {
     /// ```no_run
     /// # fn main() -> Result<(), Box<tri_mesh::mesh_builder::Error>> {
     ///     let obj_source = std::fs::read_to_string("foo.obj").expect("Something went wrong reading the file");
-    ///     let mesh = tri_mesh::mesh_builder::MeshBuilder::new().with_obj(obj_source).build()?;
+    ///     let mesh = tri_mesh::mesh_builder::MeshBuilder::<()>::new().with_obj(obj_source).build()?;
     /// #    Ok(())
     /// # }
     /// ```
@@ -131,7 +190,7 @@ impl MeshBuilder {
     /// ```no_run
     /// # fn main() -> Result<(), Box<tri_mesh::mesh_builder::Error>> {
     ///     let obj_source = std::fs::read_to_string("foo.obj").expect("Something went wrong reading the file");
-    ///     let mesh = tri_mesh::mesh_builder::MeshBuilder::new().with_named_obj(obj_source, "my_object").build()?;
+    ///     let mesh = tri_mesh::mesh_builder::MeshBuilder::<()>::new().with_named_obj(obj_source, "my_object").build()?;
     /// #    Ok(())
     /// # }
     /// ```
@@ -179,7 +238,7 @@ impl MeshBuilder {
     /// ```no_run
     /// # fn main() -> Result<(), Box<tri_mesh::mesh_builder::Error>> {
     ///     let bytes = std::fs::read("foo.3d").expect("Something went wrong reading the file");
-    ///     let mesh = tri_mesh::mesh_builder::MeshBuilder::new().with_3d(&bytes)?.build()?;
+    ///     let mesh = tri_mesh::mesh_builder::MeshBuilder::<()>::new().with_3d(&bytes)?.build()?;
     /// #    Ok(())
     /// # }
     /// ```
@@ -204,12 +263,14 @@ impl MeshBuilder {
     ///
     /// If no positions are specified, [NoPositionsSpecified](crate::mesh_builder::Error::NoPositionsSpecified) error is returned.
     ///
-    pub fn build(self) -> Result<Mesh, Error>
+    pub fn build(self) -> Result<Mesh<T>, Error>
     {
         let positions = self.positions.ok_or(
             Error::NoPositionsSpecified {message: format!("Did you forget to specify the vertex positions?")})?;
-        let indices = self.indices.unwrap_or((0..positions.len() as u32/3).collect());
-        Ok(Mesh::new(indices, positions))
+        let indices = self.indices.unwrap_or_else(|| (0..positions.len() as u32/3).collect());
+        let default_tag = self.default_tag.unwrap_or(T::default());
+        let tags = self.tags.unwrap_or_else(|| vec![default_tag; indices.len() / 3]);
+        Ok(Mesh::new(indices, tags, positions))
     }
 
     ///
@@ -221,7 +282,7 @@ impl MeshBuilder {
     /// # use tri_mesh::mesh_builder::{MeshBuilder, Error};
     /// #
     /// # fn main() -> Result<(), Box<Error>> {
-    /// let mesh = MeshBuilder::new().cube().build()?;
+    /// let mesh = MeshBuilder::<()>::new().cube().build()?;
     ///
     /// assert_eq!(mesh.no_faces(), 12);
     /// assert_eq!(mesh.no_vertices(), 8);
@@ -425,7 +486,7 @@ mod tests {
         f 5 1 4
         f 5 4 8".to_string();
 
-        let mesh = MeshBuilder::new().with_obj(source).build().unwrap();
+        let mesh = MeshBuilder::<()>::new().with_obj(source).build().unwrap();
 
         assert_eq!(mesh.no_faces(), 12);
         assert_eq!(mesh.no_vertices(), 8);

@@ -4,7 +4,7 @@ use crate::prelude::*;
 use std::collections::HashSet;
 
 /// # Connected components
-impl Mesh
+impl<T: Clone> Mesh<T>
 {
     ///
     /// Finds the connected set of faces starting from the given face.
@@ -89,7 +89,7 @@ mod tests {
         assert!(cc.iter().find(|vec| vec.len() == 1).is_some());
     }
 
-    fn create_connected_test_object() -> Mesh
+    fn create_connected_test_object() -> Mesh<()>
     {
         let positions: Vec<f64> = vec![
             1.0, -1.0, -1.0,
@@ -119,7 +119,7 @@ mod tests {
         MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap()
     }
 
-    fn create_unconnected_test_object() -> Mesh
+    fn create_unconnected_test_object() -> Mesh<()>
     {
         let positions: Vec<f64> = vec![
             1.0, -1.0, -1.0,

@@ -7,10 +7,10 @@ use crate::mesh::intersection::*;
 use std::collections::{HashSet, HashMap};
 
 /// # Split
-impl Mesh
+impl<T: Clone> Mesh<T>
 {
     /// Clones a subset of this mesh defined by the is_included function.
-    pub fn clone_subset(&self, is_included: &dyn Fn(&Mesh, FaceID) -> bool) -> Mesh
+    pub fn clone_subset(&self, is_included: &dyn Fn(&Mesh<T>, FaceID) -> bool) -> Mesh<T>
     {
         let mut clone = self.clone();
         for face_id in clone.face_iter() {
@@ -46,7 +46,7 @@ impl Mesh
     ///
     /// Splits the mesh into subsets bounded by the edges where the is_at_split function returns true.
     ///
-    pub fn split(&self, is_at_split: &dyn Fn(&Mesh, HalfEdgeID) -> bool) -> Vec<Mesh>
+    pub fn split(&self, is_at_split: &dyn Fn(&Mesh<T>, HalfEdgeID) -> bool) -> Vec<Mesh<T>>
     {
         let components = self.connected_components_with_limit(&|halfedge_id| is_at_split(self, halfedge_id));
         components.iter().map(|cc| self.clone_subset(&|_, face_id| cc.contains(&face_id))).collect()
@@ -55,7 +55,7 @@ impl Mesh
     ///
     /// Splits the two meshes into subsets bounded by the intersection between the two meshes.
     ///
-    pub fn split_at_intersection(&mut self, other: &mut Mesh) -> (Vec<Mesh>, Vec<Mesh>)
+    pub fn split_at_intersection<U: Clone>(&mut self, other: &mut Mesh<U>) -> (Vec<Mesh<T>>, Vec<Mesh<U>>)
     {
         let stitches = self.split_primitives_at_intersection_internal(other);
         let mut map1 = HashMap::new();
@@ -70,12 +70,12 @@ impl Mesh
     ///
     /// Splits the primitives of the two meshes at the intersection between the two meshes.
     ///
-    pub fn split_primitives_at_intersection(&mut self, other: &mut Mesh)
+    pub fn split_primitives_at_intersection<U: Clone>(&mut self, other: &mut Mesh<U>)
     {
         self.split_primitives_at_intersection_internal(other);
     }
 
-    fn split_primitives_at_intersection_internal(&mut self, other: &mut Mesh) -> Vec<(VertexID, VertexID)>
+    fn split_primitives_at_intersection_internal<U: Clone>(&mut self, other: &mut Mesh<U>) -> Vec<(VertexID, VertexID)>
     {
         let mut intersections = find_intersections(self, other);
         let mut stitches = Vec::new();
@@ -87,7 +87,7 @@ impl Mesh
     }
 }
 
-fn is_at_intersection(mesh1: &Mesh, mesh2: &Mesh, halfedge_id: HalfEdgeID, stitches: &HashMap<VertexID, VertexID>) -> bool
+fn is_at_intersection<T: Clone, U: Clone>(mesh1: &Mesh<T>, mesh2: &Mesh<U>, halfedge_id: HalfEdgeID, stitches: &HashMap<VertexID, VertexID>) -> bool
 {
     let (va, vb) = mesh1.ordered_edge_vertices(halfedge_id);
     if let (Some(vc), Some(vd)) = (stitches.get(&va), stitches.get(&vb))
@@ -114,7 +114,7 @@ fn is_at_intersection(mesh1: &Mesh, mesh2: &Mesh, halfedge_id: HalfEdgeID, stitc
     false
 }
 
-fn face_and_face_overlaps(mesh1: &Mesh, face_id1: FaceID, mesh2: &Mesh, face_id2: FaceID) -> bool
+fn face_and_face_overlaps<T: Clone, U: Clone>(mesh1: &Mesh<T>, face_id1: FaceID, mesh2: &Mesh<U>, face_id2: FaceID) -> bool
 {
     let (v0, v1, v2) = mesh1.face_vertices(face_id1);
     let (p0, p1, p2) = mesh2.face_positions(face_id2);
@@ -124,7 +124,7 @@ fn face_and_face_overlaps(mesh1: &Mesh, face_id1: FaceID, mesh2: &Mesh, face_id2
         && (mesh1.vertex_point_intersection(v0, &p2).is_some() || mesh1.vertex_point_intersection(v1, &p2).is_some() || mesh1.vertex_point_intersection(v2, &p2).is_some())
 }
 
-fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &HashMap<(Primitive, Primitive), Vec3>, stitches: &mut Vec<(VertexID, VertexID)>) -> Option<(Vec<HalfEdgeID>, Vec<HalfEdgeID>)>
+fn split_at_intersections<T: Clone, U: Clone>(mesh1: &mut Mesh<T>, mesh2: &mut Mesh<U>, intersections: &HashMap<(Primitive, Primitive), Vec3>, stitches: &mut Vec<(VertexID, VertexID)>) -> Option<(Vec<HalfEdgeID>, Vec<HalfEdgeID>)>
 {
     let mut new_edges1 = Vec::new();
     let mut new_edges2 = Vec::new();
@@ -241,7 +241,7 @@ fn split_at_intersections(mesh1: &mut Mesh, mesh2: &mut Mesh, intersections: &Ha
     else {None}
 }
 
-fn find_face_primitive_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, mesh: &Mesh, face_id: FaceID, point: &Vec3) -> Primitive
+fn find_face_primitive_to_split<T: Clone>(face_splits: &HashMap<FaceID, HashSet<FaceID>>, mesh: &Mesh<T>, face_id: FaceID, point: &Vec3) -> Primitive
 {
     if let Some(new_faces) = face_splits.get(&face_id)
     {
@@ -254,7 +254,7 @@ fn find_face_primitive_to_split(face_splits: &HashMap<FaceID, HashSet<FaceID>>, 
     Primitive::Face(face_id)
 }
 
-fn find_edge_primitive_to_split(edge_splits: &HashMap<HalfEdgeID, HashSet<HalfEdgeID>>, mesh: &Mesh, edge: HalfEdgeID, point: &Vec3) -> Primitive
+fn find_edge_primitive_to_split<T: Clone>(edge_splits: &HashMap<HalfEdgeID, HashSet<HalfEdgeID>>, mesh: &Mesh<T>, edge: HalfEdgeID, point: &Vec3) -> Primitive
 {
     if let Some(new_edges) = edge_splits.get(&edge)
     {
@@ -267,7 +267,7 @@ fn find_edge_primitive_to_split(edge_splits: &HashMap<HalfEdgeID, HashSet<HalfEd
     Primitive::Edge(edge)
 }
 
-fn insert_faces(face_list: &mut HashMap<FaceID, HashSet<FaceID>>, mesh: &Mesh, face_id: FaceID, vertex_id: VertexID)
+fn insert_faces<T: Clone>(face_list: &mut HashMap<FaceID, HashSet<FaceID>>, mesh: &Mesh<T>, face_id: FaceID, vertex_id: VertexID)
 {
     if !face_list.contains_key(&face_id) { face_list.insert(face_id, HashSet::new()); }
     let list = face_list.get_mut(&face_id).unwrap();
@@ -278,14 +278,14 @@ fn insert_faces(face_list: &mut HashMap<FaceID, HashSet<FaceID>>, mesh: &Mesh, f
     list.insert(mesh.walker_from_halfedge(iter.next().unwrap()).face_id().unwrap());
 }
 
-fn find_intersections(mesh1: &Mesh, mesh2: &Mesh) -> HashMap<(Primitive, Primitive), Vec3>
+fn find_intersections<T: Clone, U: Clone>(mesh1: &Mesh<T>, mesh2: &Mesh<U>) -> HashMap<(Primitive, Primitive), Vec3>
 {
     let edges1: Vec<HalfEdgeID> = mesh1.edge_iter().collect();
     let edges2: Vec<HalfEdgeID> = mesh2.edge_iter().collect();
     find_intersections_between_edge_face(mesh1, &edges1, mesh2, &edges2)
 }
 
-fn find_intersections_between_edge_face(mesh1: &Mesh, edges1: &Vec<HalfEdgeID>, mesh2: &Mesh, edges2: &Vec<HalfEdgeID>) -> HashMap<(Primitive, Primitive), Vec3>
+fn find_intersections_between_edge_face<T: Clone, U: Clone>(mesh1: &Mesh<T>, edges1: &Vec<HalfEdgeID>, mesh2: &Mesh<U>, edges2: &Vec<HalfEdgeID>) -> HashMap<(Primitive, Primitive), Vec3>
 {
     let mut intersections: HashMap<(Primitive, Primitive), Vec3> = HashMap::new();
     for edge1 in edges1
@@ -365,7 +365,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5,  0.0, 0.0, 2.0,  1.0, 0.0, 2.5];
-        let mesh = MeshBuilder::new().with_indices(indices).with_positions(positions).build().unwrap();
+        let mesh = MeshBuilder::<()>::new().with_indices(indices).with_positions(positions).build().unwrap();
 
         let mut faces = std::collections::HashSet::new();
         for face_id in mesh.face_iter() {
@@ -387,7 +387,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5,  0.0, 0.0, 2.0,  1.0, 0.0, 2.5];
-        let mesh = MeshBuilder::new().with_indices(indices).with_positions(positions).build().unwrap();
+        let mesh = MeshBuilder::<()>::new().with_indices(indices).with_positions(positions).build().unwrap();
 
         let meshes = mesh.split(&|mesh,
                                   he_id| {
@@ -412,11 +412,11 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f64> = vec![-2.0, 0.0, -2.0,  -2.0, 0.0, 2.0,  2.0, 0.0, 0.0];
-        let mut mesh1 = MeshBuilder::new().with_positions(positions1).with_indices(indices1).build().unwrap();
+        let mut mesh1 = MeshBuilder::<()>::new().with_positions(positions1).with_indices(indices1).build().unwrap();
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f64> = vec![-2.0, 0.0, 2.0,  -2.0, 0.0, -2.0,  -2.0, 0.5, 0.0];
-        let mut mesh2 = MeshBuilder::new().with_positions(positions2).with_indices(indices2).build().unwrap();
+        let mut mesh2 = MeshBuilder::<()>::new().with_positions(positions2).with_indices(indices2).build().unwrap();
 
         let (meshes1, meshes2) = mesh1.split_at_intersection(&mut mesh2);
         assert_eq!(meshes1.len(), 1);
@@ -441,11 +441,11 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f64> = vec![-2.0, 0.0, -2.0,  -2.0, 0.0, 2.0,  2.0, 0.0, 0.0];
-        let mut mesh1 = MeshBuilder::new().with_positions(positions1).with_indices(indices1).build().unwrap();
+        let mut mesh1 = MeshBuilder::<()>::new().with_positions(positions1).with_indices(indices1).build().unwrap();
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f64> = vec![-2.0, 0.0, 1.0,  -2.0, 0.0, -1.0,  -2.0, 0.5, 0.0];
-        let mut mesh2 = MeshBuilder::new().with_positions(positions2).with_indices(indices2).build().unwrap();
+        let mut mesh2 = MeshBuilder::<()>::new().with_positions(positions2).with_indices(indices2).build().unwrap();
 
         let (meshes1, meshes2) = mesh1.split_at_intersection(&mut mesh2);
         assert_eq!(meshes1.len(), 1);
@@ -468,8 +468,8 @@ mod tests {
     #[test]
     fn test_box_box_stitching()
     {
-        let mut mesh1 = MeshBuilder::new().cube().build().unwrap();
-        let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
+        let mut mesh1 = MeshBuilder::<()>::new().cube().build().unwrap();
+        let mut mesh2 = MeshBuilder::<()>::new().cube().build().unwrap();
         mesh2.translate(vec3(0.5, 0.5, 0.5));
 
         let (meshes1, meshes2) = mesh1.split_at_intersection(&mut mesh2);
@@ -494,7 +494,7 @@ mod tests {
     #[test]
     fn test_sphere_box_stitching()
     {
-        let mut mesh1 = MeshBuilder::new().icosahedron().build().unwrap();
+        let mut mesh1 = MeshBuilder::<()>::new().icosahedron().build().unwrap();
         for _ in 0..1 {
             for face_id in mesh1.face_iter() {
                 let p = mesh1.face_center(face_id).normalize();
@@ -508,7 +508,7 @@ mod tests {
             mesh1.flip_edges(0.5);
         }
         mesh1.translate(vec3(0.0, 1.5, 0.0));
-        let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
+        let mut mesh2 = MeshBuilder::<()>::new().cube().build().unwrap();
         mesh2.translate(vec3(0.5, 2.0, 0.5));
 
         let (meshes1, meshes2) = mesh1.split_at_intersection(&mut mesh2);
@@ -533,8 +533,8 @@ mod tests {
     #[test]
     fn test_is_at_intersection_cube_cube()
     {
-        let mesh1 = MeshBuilder::new().cube().build().unwrap();
-        let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
+        let mesh1 = MeshBuilder::<()>::new().cube().build().unwrap();
+        let mut mesh2 = MeshBuilder::<()>::new().cube().build().unwrap();
         mesh2.translate(vec3(0.0, 2.0, 0.0));
 
         let mut map = HashMap::new();
@@ -556,11 +556,11 @@ mod tests {
     #[test]
     fn test_is_at_intersection()
     {
-        let mesh1 = MeshBuilder::new().cube().build().unwrap();
+        let mesh1 = MeshBuilder::<()>::new().cube().build().unwrap();
 
         let positions = vec![-1.0, 1.0, 1.0,  -1.0, -1.0, 1.0,  1.0, -1.0, -1.0,  1.0, 1.0, -1.0, 0.0, 2.0, 0.0 ];
         let indices = vec![0, 1, 2,  0, 2, 3,  0, 3, 4];
-        let mesh2 = MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap();
+        let mesh2 = MeshBuilder::<()>::new().with_positions(positions).with_indices(indices).build().unwrap();
 
         let mut map = HashMap::new();
         for vertex_id1 in mesh1.vertex_iter() {
@@ -605,7 +605,7 @@ mod tests {
         let mesh1 = create_simple_mesh_x_z();
         let indices: Vec<u32> = vec![0, 1, 2];
         let positions: Vec<f64> = vec![0.5, -0.5, 0.0,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
-        let mesh2 = MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap();
+        let mesh2 = MeshBuilder::<()>::new().with_positions(positions).with_indices(indices).build().unwrap();
 
         let intersections = find_intersections(&mesh1, &mesh2);
         assert_eq!(intersections.len(), 2);
@@ -617,7 +617,7 @@ mod tests {
         let mesh1 = create_simple_mesh_x_z();
         let indices: Vec<u32> = vec![0, 1, 2];
         let positions: Vec<f64> = vec![0.5, 0.0, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
-        let mesh2 = MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap();
+        let mesh2 = MeshBuilder::<()>::new().with_positions(positions).with_indices(indices).build().unwrap();
 
         let intersections = find_intersections(&mesh1, &mesh2);
         assert_eq!(intersections.len(), 1);
@@ -629,7 +629,7 @@ mod tests {
         let mesh1 = create_simple_mesh_x_z();
         let indices: Vec<u32> = vec![0, 1, 2];
         let positions: Vec<f64> = vec![0.5, 0.0, 0.25,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
-        let mesh2 = MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap();
+        let mesh2 = MeshBuilder::<()>::new().with_positions(positions).with_indices(indices).build().unwrap();
 
         let intersections = find_intersections(&mesh1, &mesh2);
         assert_eq!(intersections.len(), 1);
@@ -641,7 +641,7 @@ mod tests {
         let mesh1 = create_simple_mesh_x_z();
         let indices: Vec<u32> = vec![0, 1, 2];
         let positions: Vec<f64> = vec![1.0, 0.0, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
-        let mesh2 = MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap();
+        let mesh2 = MeshBuilder::<()>::new().with_positions(positions).with_indices(indices).build().unwrap();
 
         let intersections = find_intersections(&mesh1, &mesh2);
         assert_eq!(intersections.len(), 1);
@@ -706,12 +706,12 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f64> = vec![-2.0, 0.0, -2.0,  -2.0, 0.0, 2.0,  2.0, 0.0, 0.0];
-        let mut mesh1 = MeshBuilder::new().with_positions(positions1).with_indices(indices1).build().unwrap();
+        let mut mesh1 = MeshBuilder::<()>::new().with_positions(positions1).with_indices(indices1).build().unwrap();
         let area1 = mesh1.face_area(mesh1.face_iter().next().unwrap());
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f64> = vec![0.2, -0.2, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
-        let mut mesh2 = MeshBuilder::new().with_positions(positions2).with_indices(indices2).build().unwrap();
+        let mut mesh2 = MeshBuilder::<()>::new().with_positions(positions2).with_indices(indices2).build().unwrap();
 
         let intersections = find_intersections(&mesh1, &mesh2);
 
@@ -746,11 +746,11 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f64> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 2.0,  2.0, 0.0, 0.0];
-        let mut mesh1 = MeshBuilder::new().with_positions(positions1).with_indices(indices1).build().unwrap();
+        let mut mesh1 = MeshBuilder::<()>::new().with_positions(positions1).with_indices(indices1).build().unwrap();
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f64> = vec![0.0, -0.2, 0.5,  0.0, -0.2, 1.5,  0.0, 1.5, 0.0];
-        let mut mesh2 = MeshBuilder::new().with_positions(positions2).with_indices(indices2).build().unwrap();
+        let mut mesh2 = MeshBuilder::<()>::new().with_positions(positions2).with_indices(indices2).build().unwrap();
 
         let intersections = find_intersections(&mesh1, &mesh2);
 
@@ -779,11 +779,11 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f64> = vec![-2.0, 0.0, -2.0,  -2.0, 0.0, 2.0,  2.0, 0.0, 0.0];
-        let mut mesh1 = MeshBuilder::new().with_positions(positions1).with_indices(indices1).build().unwrap();
+        let mut mesh1 = MeshBuilder::<()>::new().with_positions(positions1).with_indices(indices1).build().unwrap();
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f64> = vec![0.2, -0.2, 0.5,  0.5, 0.5, 0.75,  0.5, 0.5, 0.0];
-        let mut mesh2 = MeshBuilder::new().with_positions(positions2).with_indices(indices2).build().unwrap();
+        let mut mesh2 = MeshBuilder::<()>::new().with_positions(positions2).with_indices(indices2).build().unwrap();
 
         mesh1.split_primitives_at_intersection(&mut mesh2);
 
@@ -812,8 +812,8 @@ mod tests {
     #[test]
     fn test_box_box_splitting()
     {
-        let mut mesh1 = MeshBuilder::new().cube().build().unwrap();
-        let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
+        let mut mesh1 = MeshBuilder::<()>::new().cube().build().unwrap();
+        let mut mesh2 = MeshBuilder::<()>::new().cube().build().unwrap();
         mesh2.translate(vec3(0.5, 0.5, 0.5));
 
         mesh1.split_primitives_at_intersection(&mut mesh2);
@@ -822,24 +822,24 @@ mod tests {
         mesh2.is_valid().unwrap();
     }
 
-    fn create_simple_mesh_x_z() -> Mesh
+    fn create_simple_mesh_x_z() -> Mesh<()>
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5,  0.0, 0.0, 2.0,  1.0, 0.0, 2.5];
-        MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap()
+        MeshBuilder::<()>::new().with_positions(positions).with_indices(indices).build().unwrap()
     }
 
-    fn create_simple_mesh_y_z() -> Mesh
+    fn create_simple_mesh_y_z() -> Mesh<()>
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f64> = vec![0.5, -0.5, 0.0,  0.5, -0.5, 1.0,  0.5, 0.5, 0.5,  0.5, 0.5, 1.5,  0.5, -0.5, 2.0,  0.5, 0.5, 2.5];
-        MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap()
+        MeshBuilder::<()>::new().with_positions(positions).with_indices(indices).build().unwrap()
     }
 
-    fn create_shifted_simple_mesh_y_z() -> Mesh
+    fn create_shifted_simple_mesh_y_z() -> Mesh<()>
     {
         let indices: Vec<u32> = vec![0, 1, 2,  2, 1, 3,  3, 1, 4,  3, 4, 5];
         let positions: Vec<f64> = vec![0.5, -0.5, -0.2,  0.5, -0.5, 0.8,  0.5, 0.5, 0.3,  0.5, 0.5, 1.3,  0.5, -0.5, 1.8,  0.5, 0.5, 2.3];
-        MeshBuilder::new().with_positions(positions).with_indices(indices).build().unwrap()
+        MeshBuilder::<()>::new().with_positions(positions).with_indices(indices).build().unwrap()
     }
 }

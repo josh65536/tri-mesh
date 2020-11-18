@@ -5,7 +5,7 @@ use crate::mesh::math::*;
 use crate::mesh::ids::*;
 
 /// # Edit
-impl Mesh
+impl<T: Clone> Mesh<T>
 {
     /// Flip the given edge such that the edge after the flip is connected to the
     /// other pair of the four vertices connected to the two adjacent faces.
@@ -115,8 +115,10 @@ impl Mesh
         let halfedge_id3 = walker.halfedge_id().unwrap();
         let vertex_id3 = walker.vertex_id().unwrap();
 
-        let face_id1 = self.connectivity_info.create_face_with_existing_halfedge(vertex_id1, vertex_id2, new_vertex_id, halfedge_id2);
-        let face_id2 = self.connectivity_info.create_face_with_existing_halfedge(vertex_id2, vertex_id3, new_vertex_id, halfedge_id3);
+        let tag = self.face_tag(face_id);
+
+        let face_id1 = self.connectivity_info.create_face_with_existing_halfedge(vertex_id1, vertex_id2, new_vertex_id, halfedge_id2, tag.clone());
+        let face_id2 = self.connectivity_info.create_face_with_existing_halfedge(vertex_id2, vertex_id3, new_vertex_id, halfedge_id3, tag);
 
         let new_halfedge_id2 = self.connectivity_info.new_halfedge(Some(vertex_id3), Some(halfedge_id1), Some(face_id));
         let new_halfedge_id1 = self.connectivity_info.new_halfedge(Some(new_vertex_id), Some(new_halfedge_id2), Some(face_id));
@@ -151,6 +153,7 @@ impl Mesh
         let mut walker = self.walker_from_halfedge(halfedge_id);
         let vertex_id1 = walker.vertex_id().unwrap();
         let old_face_id = walker.face_id().unwrap();
+        let tag = self.face_tag(old_face_id);
 
         walker.as_next();
         let halfedge_to_reuse_vertex = walker.vertex_id().unwrap();
@@ -158,7 +161,7 @@ impl Mesh
         let halfedge_to_reuse_next = walker.next_id().unwrap();
 
         // Create new face
-        let new_face_id = self.connectivity_info.create_face_with_existing_halfedge(vertex_id1, halfedge_to_reuse_vertex, new_vertex_id, halfedge_to_reuse);
+        let new_face_id = self.connectivity_info.create_face_with_existing_halfedge(vertex_id1, halfedge_to_reuse_vertex, new_vertex_id, halfedge_to_reuse, tag);
 
         // Update old face
         let new_halfedge_id = self.connectivity_info.new_halfedge(Some(halfedge_to_reuse_vertex), Some(halfedge_to_reuse_next), Some(old_face_id));
@@ -283,7 +286,7 @@ impl Mesh
             self.connectivity_info.remove_halfedge(halfedge_id1);
             self.connectivity_info.remove_halfedge(halfedge_id2);
 
-            let find_new_edge_connectivity = |mesh: &Mesh, vertex_id: VertexID| -> Option<HalfEdgeID>
+            let find_new_edge_connectivity = |mesh: &Mesh<T>, vertex_id: VertexID| -> Option<HalfEdgeID>
             {
                 for halfedge_id in mesh.halfedge_iter() {
                     let walker = mesh.walker_from_halfedge(halfedge_id);
@@ -346,7 +349,7 @@ mod tests {
     fn test_flip_edge()
     {
         let mut no_flips = 0;
-        let mut mesh = MeshBuilder::new().square().build().unwrap();
+        let mut mesh = MeshBuilder::<()>::new().square().build().unwrap();
         let no_edges = mesh.no_halfedges();
         for halfedge_id in mesh.halfedge_iter() {
             let (v0, v1) = mesh.edge_vertices(halfedge_id);
@@ -379,7 +382,7 @@ mod tests {
     fn test_flip_multiple_edges()
     {
         let mut no_flips = 0;
-        let mut mesh = MeshBuilder::new().icosahedron().build().unwrap();
+        let mut mesh = MeshBuilder::<()>::new().icosahedron().build().unwrap();
         let no_edges = mesh.no_halfedges();
         for halfedge_id in mesh.halfedge_iter() {
             let (v0, v1) = mesh.edge_vertices(halfedge_id);
@@ -411,7 +414,7 @@ mod tests {
     #[test]
     fn test_split_edge_on_boundary()
     {
-        let mut mesh = MeshBuilder::new().triangle().build().unwrap();
+        let mut mesh = MeshBuilder::<()>::new().triangle().build().unwrap();
         for halfedge_id in mesh.halfedge_iter()
         {
             if mesh.walker_from_halfedge(halfedge_id).face_id().is_some()
@@ -452,7 +455,7 @@ mod tests {
     #[test]
     fn test_split_edge()
     {
-        let mut mesh = MeshBuilder::new().square().build().unwrap();
+        let mut mesh = MeshBuilder::<()>::new().square().build().unwrap();
         for halfedge_id in mesh.halfedge_iter() {
             let mut walker = mesh.walker_from_halfedge(halfedge_id);
             if walker.face_id().is_some() && walker.as_twin().face_id().is_some()
@@ -484,7 +487,7 @@ mod tests {
     #[test]
     fn test_split_face()
     {
-        let mut mesh = MeshBuilder::new().triangle().build().unwrap();
+        let mut mesh = MeshBuilder::<()>::new().triangle().build().unwrap();
         let face_id = mesh.face_iter().next().unwrap();
 
         let vertex_id = mesh.split_face(face_id, vec3(-1.0, -1.0, -1.0));
@@ -516,7 +519,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 1, 2,  1, 3, 2,  2, 3, 4  ];
         let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0,  1.0, 0.0, 1.0,  2.0, 0.0, 0.5];
-        let mut mesh = Mesh::new(indices, positions);
+        let mut mesh = Mesh::new(indices, vec![(); 3], positions);
 
         for halfedge_id in mesh.halfedge_iter()
         {
@@ -541,7 +544,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1];
         let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0,  1.0, 0.0, 1.0];
-        let mut mesh = Mesh::new(indices, positions);
+        let mut mesh = Mesh::new(indices, vec![(); 2], positions);
         for halfedge_id in mesh.halfedge_iter()
         {
             if mesh.is_edge_on_boundary(halfedge_id)
@@ -563,7 +566,7 @@ mod tests {
     #[test]
     fn test_collapse_edge()
     {
-        let mut mesh = MeshBuilder::new().subdivided_triangle().build().unwrap();
+        let mut mesh = MeshBuilder::<()>::new().subdivided_triangle().build().unwrap();
         for halfedge_id in mesh.halfedge_iter() {
             if !mesh.is_edge_on_boundary(halfedge_id)
             {
@@ -583,7 +586,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 1, 2,  1, 3, 2,  2, 3, 4  ];
         let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.0,  1.0, 0.0, 1.0,  2.0, 0.0, 0.5];
-        let mut mesh = Mesh::new(indices, positions);
+        let mut mesh = Mesh::new(indices, vec![(); 3], positions);
 
         while mesh.no_faces() > 1 {
             for halfedge_id in mesh.halfedge_iter() {
@@ -605,7 +608,7 @@ mod tests {
     {
         let positions: Vec<f64> = vec![1.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, -1.0,
                                        1.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, -1.0];
-        let mut mesh = Mesh::new((0..6).collect(), positions);
+        let mut mesh = Mesh::new((0..6).collect(), vec![(); 2], positions);
 
         let faces: Vec<FaceID> = mesh.face_iter().into_iter().collect();
 
@@ -620,7 +623,7 @@ mod tests {
     #[test]
     fn test_remove_face_when_connected()
     {
-        let mut mesh = MeshBuilder::new().square().build().unwrap();
+        let mut mesh = MeshBuilder::<()>::new().square().build().unwrap();
 
         let face_id = mesh.face_iter().next().unwrap();
 
@@ -635,7 +638,7 @@ mod tests {
     #[test]
     fn test_remove_face_when_three_connected_faces()
     {
-        let mut mesh = MeshBuilder::new().subdivided_triangle().build().unwrap();
+        let mut mesh = MeshBuilder::<()>::new().subdivided_triangle().build().unwrap();
 
         let face_id = mesh.face_iter().next().unwrap();
 

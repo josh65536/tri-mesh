@@ -4,7 +4,7 @@ use crate::mesh::Mesh;
 use crate::mesh::ids::*;
 
 /// # Connectivity
-impl Mesh
+impl<T: Clone> Mesh<T>
 {
     ///
     /// Returns the connecting edge between the two vertices or `None` if no edge is found.

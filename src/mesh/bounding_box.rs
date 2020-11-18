@@ -4,7 +4,7 @@ use crate::mesh::Mesh;
 use crate::mesh::math::*;
 
 /// # Bounding box
-impl Mesh
+impl<T: Clone> Mesh<T>
 {
     /// Returns minimum and maximum coordinates of the axis aligned bounding box of the mesh.
     pub fn extreme_coordinates(&self) -> (Vec3, Vec3)
@@ -30,7 +30,7 @@ impl Mesh
     }
 
     /// Returns the smallest axis aligned box which contains the entire mesh, ie. the axis aligned bounding box.
-    pub fn axis_aligned_bounding_box(&self) -> Mesh
+    pub fn axis_aligned_bounding_box(&self) -> Mesh<()>
     {
         let (min_coord, max_coord) = self.extreme_coordinates();
         let mut mesh = crate::MeshBuilder::new().cube().build().unwrap();
@@ -50,7 +50,7 @@ mod tests {
 
     #[test]
     fn test_axis_aligned_bounding_box() {
-        let mut mesh = MeshBuilder::new().cylinder(3, 16).build().unwrap();
+        let mut mesh = MeshBuilder::<()>::new().cylinder(3, 16).build().unwrap();
         mesh.non_uniform_scale(4.5, 0.1, -4.5);
         mesh.translate(vec3(-1.5, 3.7, 9.1));
 

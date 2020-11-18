@@ -4,8 +4,8 @@ use crate::mesh::Mesh;
 use crate::mesh::ids::*;
 
 /// # Orientation
-impl Mesh {
-
+impl<T: Clone> Mesh<T>
+{
     /// Flip the orientation of all faces in the mesh, ie. such that the normal points in the opposite direction.
     pub fn flip_orientation(&mut self)
     {
@@ -81,7 +81,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 1, 2,  1, 2, 3];
         let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, 0.5,  1.0, 0.0, 1.5];
-        let mut mesh = crate::MeshBuilder::new().with_indices(indices).with_positions(positions).build().unwrap();
+        let mut mesh = crate::MeshBuilder::<()>::new().with_indices(indices).with_positions(positions).build().unwrap();
 
         mesh.flip_orientation_of_face(mesh.face_iter().next().unwrap());
         mesh.is_valid().unwrap();
@@ -91,7 +91,7 @@ mod tests {
     #[test]
     fn test_flip_orientation()
     {
-        let mut mesh = crate::MeshBuilder::new().cube().build().unwrap();
+        let mut mesh = crate::MeshBuilder::<()>::new().cube().build().unwrap();
 
         let mut map = std::collections::HashMap::new();
         for face_id in mesh.face_iter() {

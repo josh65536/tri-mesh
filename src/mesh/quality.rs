@@ -6,7 +6,7 @@ use crate::mesh::ids::*;
 use std::collections::{HashSet, HashMap};
 
 /// # Quality
-impl Mesh
+impl<T: Clone> Mesh<T>
 {
     /// Moves the vertices to `pos + factor * (avg_pos - pos)` where `pos` is the current position
     /// and `avg_pos` is the average position of the neighbouring vertices.
@@ -72,7 +72,7 @@ impl Mesh
     ///
     pub fn flip_edges(&mut self, flatness_threshold: f64)
     {
-        let insert_or_remove = |mesh: &Mesh, to_be_flipped: &mut HashSet<HalfEdgeID>, halfedge_id: HalfEdgeID| {
+        let insert_or_remove = |mesh: &Mesh<T>, to_be_flipped: &mut HashSet<HalfEdgeID>, halfedge_id: HalfEdgeID| {
             let twin_id = mesh.walker_from_halfedge(halfedge_id).twin_id().unwrap();
             let id = if halfedge_id < twin_id {halfedge_id} else {twin_id};
             if mesh.should_flip(id, flatness_threshold) { to_be_flipped.insert(id); } else { to_be_flipped.remove(&id); }
@@ -163,7 +163,7 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 2, 3,  0, 3, 1,  0, 1, 2];
         let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  0.0, 0.0, 0.1,  0.1, 0.0, -0.1,  -1.0, 0.0, -0.5];
-        let mut mesh = Mesh::new(indices, positions);
+        let mut mesh = Mesh::new(indices, vec![(); 3], positions);
 
         mesh.collapse_small_faces(0.2);
         mesh.is_valid().unwrap();
@@ -172,7 +172,7 @@ mod tests {
     #[test]
     fn test_remove_lonely_vertices()
     {
-        let mut mesh = MeshBuilder::new().subdivided_triangle().build().unwrap();
+        let mut mesh = MeshBuilder::<()>::new().subdivided_triangle().build().unwrap();
         let mut iter = mesh.face_iter();
         let face_id1 = iter.next().unwrap();
         let face_id2 = iter.next().unwrap();

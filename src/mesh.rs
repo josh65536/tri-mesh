@@ -111,13 +111,13 @@ impl From<std::io::Error> for Error {
 /// - [Validity](#validity)
 ///
 #[derive(Debug)]
-pub struct Mesh {
-    connectivity_info: ConnectivityInfo
+pub struct Mesh<T> {
+    connectivity_info: ConnectivityInfo<T>
 }
 
-impl Mesh
+impl<T: Clone> Mesh<T>
 {
-    pub(crate) fn new(indices: Vec<u32>, positions: Vec<f64>) -> Mesh
+    pub(crate) fn new(indices: Vec<u32>, tags: Vec<T>, positions: Vec<f64>) -> Mesh<T>
     {
         let no_vertices = positions.len()/3;
         let no_faces = indices.len()/3;
@@ -137,12 +137,12 @@ impl Mesh
         }
 
         // Create faces and twin connectivity
-        for face in 0..no_faces {
+        for (face, tag) in (0..no_faces).zip(tags.into_iter()) {
             let v0 = indices[face * 3];
             let v1 = indices[face * 3 + 1];
             let v2 = indices[face * 3 + 2];
 
-            let face = mesh.connectivity_info.create_face(VertexID::new(v0), VertexID::new(v1), VertexID::new(v2));
+            let face = mesh.connectivity_info.create_face(VertexID::new(v0), VertexID::new(v1), VertexID::new(v2), tag);
             
             // mark twin halfedges
 			let mut walker = mesh.walker_from_face(face);
@@ -168,7 +168,7 @@ impl Mesh
         mesh
     }
 
-    fn new_internal(connectivity_info: ConnectivityInfo) -> Mesh
+    fn new_internal(connectivity_info: ConnectivityInfo<T>) -> Mesh<T>
     {
         Mesh {connectivity_info}
     }
@@ -228,13 +228,13 @@ impl Mesh
     }
 }
 
-impl Clone for Mesh {
-    fn clone(&self) -> Mesh {
+impl<T: Clone> Clone for Mesh<T> {
+    fn clone(&self) -> Mesh<T> {
         Mesh::new_internal(self.connectivity_info.clone())
     }
 }
 
-impl std::fmt::Display for Mesh {
+impl<T: std::fmt::Debug> std::fmt::Display for Mesh<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         writeln!(f, "**** Connectivity: ****")?;
         writeln!(f, "{}", self.connectivity_info)?;
@@ -259,7 +259,7 @@ mod tests {
 
     #[test]
     fn test_one_face_connectivity() {
-        let mesh = Mesh::new(vec![0, 1, 2], vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]);
+        let mesh = Mesh::new(vec![0, 1, 2], vec![()], vec![0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0]);
 
         let f1 = mesh.face_iter().next().unwrap();
         let v1 = mesh.walker_from_face(f1).vertex_id().unwrap();
@@ -295,7 +295,7 @@ mod tests {
 
     #[test]
     fn test_three_face_connectivity() {
-        let mesh = MeshBuilder::new().subdivided_triangle().build().unwrap();
+        let mesh = MeshBuilder::<()>::new().subdivided_triangle().build().unwrap();
         let mut id = None;
         for vertex_id in mesh.vertex_iter() {
             let mut round = true;
@@ -317,7 +317,7 @@ mod tests {
                                        0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
                                        0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5];
 
-        let mesh = Mesh::new((0..9).collect(), positions);
+        let mesh = Mesh::new((0..9).collect(), vec![(); 3], positions);
 
         assert_eq!(9, mesh.no_vertices());
         assert_eq!(3, mesh.no_faces());
@@ -328,8 +328,9 @@ mod tests {
     fn test_extreme_coordinates()
     {
         let indices: Vec<u32> = vec![0, 1, 2,  0, 2, 3,  0, 3, 1];
+        let tags = vec![1, 0, 1];
         let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
-        let mesh = MeshBuilder::new().with_indices(indices).with_positions(positions).build().unwrap();
+        let mesh = MeshBuilder::new().with_indices(indices).with_tags(tags).with_positions(positions).build().unwrap();
 
         let (min_coordinates, max_coordinates) = mesh.extreme_coordinates();
 
@@ -342,14 +343,14 @@ mod tests {
     {
         let indices: Vec<u32> = vec![0, 1, 2,  0, 2, 3,  0, 3, 1];
         let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
-        let mesh = MeshBuilder::new().with_indices(indices).with_positions(positions).build().unwrap();
+        let mesh = MeshBuilder::<()>::new().with_indices(indices).with_positions(positions).build().unwrap();
         assert!(!mesh.is_closed());
     }
 
     #[test]
     fn test_is_closed_when_closed()
     {
-        let mesh = MeshBuilder::new().cube().build().unwrap();
+        let mesh = MeshBuilder::<()>::new().cube().build().unwrap();
         assert!(mesh.is_closed());
     }
 }

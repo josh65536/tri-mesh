@@ -3,14 +3,14 @@ use crate::mesh::ids::*;
 use crate::mesh::math::Vec3;
 
 #[derive(Clone, Debug)]
-pub(crate) struct ConnectivityInfo {
+pub(crate) struct ConnectivityInfo<T> {
     vertices: RefCell<IDMap<VertexID, Vertex>>,
     halfedges: RefCell<IDMap<HalfEdgeID, HalfEdge>>,
-    faces: RefCell<IDMap<FaceID, Face>>
+    faces: RefCell<IDMap<FaceID, Face<T>>>
 }
 
-impl ConnectivityInfo {
-    pub fn new(no_vertices: usize, no_faces: usize) -> ConnectivityInfo
+impl<T> ConnectivityInfo<T> {
+    pub fn new(no_vertices: usize, no_faces: usize) -> ConnectivityInfo<T>
     {
         ConnectivityInfo {
             vertices: RefCell::new(IDMap::with_capacity(no_vertices)),
@@ -35,9 +35,9 @@ impl ConnectivityInfo {
     }
 
     // Creates a face and the three internal half-edges and connects them to eachother and to the three given vertices
-    pub fn create_face(&self, vertex_id1: VertexID, vertex_id2: VertexID, vertex_id3: VertexID) -> FaceID
+    pub fn create_face(&self, vertex_id1: VertexID, vertex_id2: VertexID, vertex_id3: VertexID, tag: T) -> FaceID
     {
-        let id = self.new_face();
+        let id = self.new_face(tag);
 
         // Create inner half-edges
         let halfedge1 = self.new_halfedge(Some(vertex_id2), None, Some(id));
@@ -55,9 +55,10 @@ impl ConnectivityInfo {
         id
     }
 
-    pub fn create_face_with_existing_halfedge(&self, vertex_id1: VertexID, vertex_id2: VertexID, vertex_id3: VertexID, halfedge_id: HalfEdgeID) -> FaceID
+    pub fn create_face_with_existing_halfedge(&self, vertex_id1: VertexID, vertex_id2: VertexID, vertex_id3: VertexID, halfedge_id: HalfEdgeID,
+        tag: T) -> FaceID
     {
-        let id = self.new_face();
+        let id = self.new_face(tag);
 
         // Create inner half-edges
         let halfedge3 = self.new_halfedge(Some(vertex_id1), Some(halfedge_id), Some(id));
@@ -87,10 +88,10 @@ impl ConnectivityInfo {
         halfedges.insert_new(HalfEdge { vertex, twin: None, next, face }).unwrap()
     }
 
-    fn new_face(&self) -> FaceID
+    fn new_face(&self, tag: T) -> FaceID
     {
         let faces = &mut *RefCell::borrow_mut(&self.faces);
-        faces.insert_new(Face { halfedge: None }).unwrap()
+        faces.insert_new(Face { halfedge: None, tag }).unwrap()
     }
 
     pub fn remove_vertex(&self, vertex_id: VertexID)
@@ -114,6 +115,10 @@ impl ConnectivityInfo {
     {
         let faces = &mut *RefCell::borrow_mut(&self.faces);
         faces.remove(face_id);
+    }
+
+    pub fn face_tag(&self, face_id: FaceID) -> T where T: Clone {
+        RefCell::borrow(&self.faces).get(face_id).unwrap().tag.clone()
     }
 
     pub fn set_vertex_halfedge(&self, id: VertexID, val: Option<HalfEdgeID>)
@@ -189,7 +194,7 @@ impl ConnectivityInfo {
     }
 }
 
-impl std::fmt::Display for ConnectivityInfo {
+impl<T: std::fmt::Debug> std::fmt::Display for ConnectivityInfo<T> {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> std::fmt::Result {
         writeln!(f, "**** VERTICES: ****")?;
         let vertices = RefCell::borrow(&self.vertices);
@@ -227,9 +232,12 @@ pub struct HalfEdge {
     pub face: Option<FaceID>
 }
 
+/// Face is parameterized by the type of custom data to store
 #[derive(Copy, Clone, Eq, PartialEq, Ord, PartialOrd, Hash, Debug)]
-pub struct Face {
-    pub halfedge: Option<HalfEdgeID>
+pub struct Face<T> {
+    pub halfedge: Option<HalfEdgeID>,
+    /// Custom data to store in the face
+    pub tag: T,
 }
 
 #[derive(Debug, Clone)]

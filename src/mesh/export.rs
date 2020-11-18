@@ -13,7 +13,7 @@ use crate::mesh::ids::*;
 /// ## Index based arrays
 ///
 /// ```
-/// # let mesh = tri_mesh::MeshBuilder::new().cube().build().unwrap();
+/// # let mesh = tri_mesh::MeshBuilder::<()>::new().cube().build().unwrap();
 /// // Get face indices, vertex positions and vertex normals as float arrays..
 /// let indices = mesh.indices_buffer();
 /// let positions = mesh.positions_buffer();
@@ -50,7 +50,7 @@ use crate::mesh::ids::*;
 /// ## Non-index based arrays
 ///
 /// ```
-/// # let mesh = tri_mesh::MeshBuilder::new().cube().build().unwrap();
+/// # let mesh = tri_mesh::MeshBuilder::<()>::new().cube().build().unwrap();
 /// // Get vertex positions and vertex normals for each corner of each face as float arrays..
 /// let positions = mesh.non_indexed_positions_buffer();
 /// let normals = mesh.non_indexed_normals_buffer();
@@ -75,7 +75,7 @@ use crate::mesh::ids::*;
 /// ```
 ///
 ///
-impl Mesh
+impl<T: Clone> Mesh<T>
 {
     ///
     /// Returns the face indices in an array `(i0, i1, i2) = (indices[3*x], indices[3*x+1], indices[3*x+2])` which is meant to be used for visualisation.
@@ -215,7 +215,7 @@ impl Mesh
     ///
     /// ```no_run
     /// # fn main() -> std::io::Result<()> {
-    /// # let mesh = tri_mesh::MeshBuilder::new().cube().build().unwrap();
+    /// # let mesh = tri_mesh::MeshBuilder::<()>::new().cube().build().unwrap();
     /// // Write the mesh data to a string
     /// let obj_source = mesh.parse_as_obj();
     ///
@@ -267,7 +267,7 @@ impl Mesh
     ///
     /// ```no_run
     /// # fn main() -> Result<(), tri_mesh::mesh::Error> {
-    /// # let mesh = tri_mesh::MeshBuilder::new().cube().build().unwrap();
+    /// # let mesh = tri_mesh::MeshBuilder::<()>::new().cube().build().unwrap();
     /// // Write the mesh data to a byte array
     /// let bytes = mesh.parse_as_3d()?;
     ///
@@ -299,9 +299,9 @@ mod tests {
 
     #[test]
     fn test_parse_as_3d() {
-        let mesh = MeshBuilder::new().cylinder(3, 16).build().unwrap();
+        let mesh = MeshBuilder::<()>::new().cylinder(3, 16).build().unwrap();
         let encoded: Vec<u8> = mesh.parse_as_3d().unwrap();
-        let decoded = MeshBuilder::new().with_3d(&encoded).unwrap().build().unwrap();
+        let decoded = MeshBuilder::<()>::new().with_3d(&encoded).unwrap().build().unwrap();
 
         assert_eq!(mesh.no_vertices(), decoded.no_vertices());
         assert_eq!(mesh.no_faces(), decoded.no_faces());
@@ -309,7 +309,7 @@ mod tests {
 
     #[test]
     fn test_indexed_export() {
-        let mesh = MeshBuilder::new().cylinder(3, 16).build().unwrap();
+        let mesh = MeshBuilder::<()>::new().cylinder(3, 16).build().unwrap();
         let indices = mesh.indices_buffer();
         let positions = mesh.positions_buffer();
         let normals = mesh.normals_buffer();
@@ -341,7 +341,7 @@ mod tests {
 
     #[test]
     fn test_non_indexed_export() {
-        let mesh = MeshBuilder::new().cylinder(3, 16).build().unwrap();
+        let mesh = MeshBuilder::<()>::new().cylinder(3, 16).build().unwrap();
         let positions = mesh.non_indexed_positions_buffer();
         let normals = mesh.non_indexed_normals_buffer();
 

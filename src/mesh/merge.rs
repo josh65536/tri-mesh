@@ -6,7 +6,7 @@ use crate::mesh::ids::*;
 use std::collections::{HashSet, HashMap};
 
 /// # Merge
-impl Mesh
+impl<T: Clone> Mesh<T>
 {
     ///
     /// Merges the mesh together with the `other` mesh.
@@ -30,7 +30,7 @@ impl Mesh
     pub fn append(&mut self, other: &Self)
     {
         let mut mapping: HashMap<VertexID, VertexID> = HashMap::new();
-        let mut get_or_create_vertex = |mesh: &mut Mesh, vertex_id| -> VertexID {
+        let mut get_or_create_vertex = |mesh: &mut Mesh<T>, vertex_id| -> VertexID {
             if let Some(vid) = mapping.get(&vertex_id) {return *vid;}
             let p = other.vertex_position(vertex_id);
             let vid = mesh.create_vertex(p.clone());
@@ -45,7 +45,8 @@ impl Mesh
             let vertex_id0 = get_or_create_vertex(self, vertex_ids.0);
             let vertex_id1 = get_or_create_vertex(self, vertex_ids.1);
             let vertex_id2 = get_or_create_vertex(self, vertex_ids.2);
-            let new_face_id = self.connectivity_info.create_face(vertex_id0, vertex_id1, vertex_id2);
+            let tag = self.face_tag(other_face_id);
+            let new_face_id = self.connectivity_info.create_face(vertex_id0, vertex_id1, vertex_id2, tag);
 
             for halfedge_id in other.face_halfedge_iter(other_face_id) {
                 if let Some(fid) = other.walker_from_halfedge(halfedge_id).as_twin().face_id()
@@ -349,7 +350,7 @@ mod tests {
                                        0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
                                        0.0, 0.0, 0.0,  0.0, 0.0, 1.0,  1.0, 0.0, -0.5];
 
-        let mut mesh = Mesh::new((0..9).collect(), positions);
+        let mut mesh = Mesh::new((0..9).collect(), vec![(); 3], positions);
         mesh.merge_overlapping_primitives().unwrap();
 
         assert_eq!(4, mesh.no_vertices());
@@ -361,7 +362,7 @@ mod tests {
     #[test]
     fn test_merge_overlapping_primitives_of_cube()
     {
-        let mut mesh = MeshBuilder::new().unconnected_cube().build().unwrap();
+        let mut mesh = MeshBuilder::<()>::new().unconnected_cube().build().unwrap();
         mesh.merge_overlapping_primitives().unwrap();
 
         assert_eq!(8, mesh.no_vertices());
@@ -377,7 +378,7 @@ mod tests {
                                        0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0,
                                        0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
 
-        let mut mesh = Mesh::new((0..9).collect(), positions);
+        let mut mesh = Mesh::new((0..9).collect(), vec![(); 3], positions);
         mesh.merge_overlapping_primitives().unwrap();
 
         assert_eq!(4, mesh.no_vertices());
@@ -393,7 +394,7 @@ mod tests {
         let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0,
                                        -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0,  -1.0, 0.0, 1.5];
 
-        let mut mesh = Mesh::new(indices, positions);
+        let mut mesh = Mesh::new(indices, vec![(); 4], positions);
         mesh.merge_overlapping_primitives().unwrap();
 
         assert_eq!(5, mesh.no_vertices());
@@ -410,7 +411,7 @@ mod tests {
                                        -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0,  -1.0, 0.0, 1.5,
                                         -1.0, 0.0, 0.0,  -0.5, 0.0, 1.0,  -1.5, 0.0, 1.0];
 
-        let mut mesh = Mesh::new(indices, positions);
+        let mut mesh = Mesh::new(indices, vec![(); 5], positions);
         mesh.merge_overlapping_primitives().unwrap();
 
         assert_eq!(5, mesh.no_vertices());
@@ -424,7 +425,7 @@ mod tests {
     {
         let positions: Vec<f64> = vec![0.0, 0.0, 0.0,  1.0, 0.0, -0.5,  -1.0, 0.0, -0.5,
                                        0.0, 0.0, 0.0,  -1.0, 0.0, -0.5, 0.0, 0.0, 1.0];
-        let mut mesh = Mesh::new((0..6).collect(), positions);
+        let mut mesh = Mesh::new((0..6).collect(), vec![(); 2], positions);
 
         let mut vertex_id1 = None;
         for vertex_id in mesh.vertex_iter() {
@@ -448,7 +449,7 @@ mod tests {
     {
         let positions: Vec<f64> = vec![1.0, 0.0, 0.0,  0.0, 0.0, 0.0,  0.0, 0.0, -1.0,
                                        0.0, 0.0, 0.0,  1.0, 0.0, 0.0,  0.0, 0.0, 1.0];
-        let mut mesh = Mesh::new((0..6).collect(), positions);
+        let mut mesh = Mesh::new((0..6).collect(), vec![(); 2], positions);
 
         let mut heid1 = None;
         for halfedge_id in mesh.edge_iter() {
@@ -477,11 +478,11 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f64> = vec![-2.0, 0.0, -2.0, -2.0, 0.0, 2.0, 2.0, 0.0, 0.0];
-        let mut mesh1 = MeshBuilder::new().with_indices(indices1).with_positions(positions1).build().unwrap();
+        let mut mesh1 = MeshBuilder::<()>::new().with_indices(indices1).with_positions(positions1).build().unwrap();
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f64> = vec![-2.0, 0.0, 2.0, -2.0, 0.0, -2.0, -2.0, 0.5, 0.0];
-        let mesh2 = MeshBuilder::new().with_indices(indices2).with_positions(positions2).build().unwrap();
+        let mesh2 = MeshBuilder::<()>::new().with_indices(indices2).with_positions(positions2).build().unwrap();
 
         mesh1.merge_with(&mesh2).unwrap();
 
@@ -497,11 +498,11 @@ mod tests {
     {
         let indices1: Vec<u32> = vec![0, 1, 2];
         let positions1: Vec<f64> = vec![-2.0, 0.0, -2.0, -2.0, 0.0, 2.0, 2.0, 0.0, 0.0];
-        let mut mesh1 = MeshBuilder::new().with_indices(indices1).with_positions(positions1).build().unwrap();
+        let mut mesh1 = MeshBuilder::<()>::new().with_indices(indices1).with_positions(positions1).build().unwrap();
 
         let indices2: Vec<u32> = vec![0, 1, 2];
         let positions2: Vec<f64> = vec![-2.0, 0.0, 2.0, -2.0, 0.5, 0.0, -2.0, 0.0, -2.0];
-        let mesh2 = MeshBuilder::new().with_indices(indices2).with_positions(positions2).build().unwrap();
+        let mesh2 = MeshBuilder::<()>::new().with_indices(indices2).with_positions(positions2).build().unwrap();
 
         mesh1.merge_with(&mesh2).unwrap();
 
@@ -515,8 +516,8 @@ mod tests {
     #[test]
     fn test_box_icosahedron_append()
     {
-        let mut mesh1 = MeshBuilder::new().cube().build().unwrap();
-        let mut mesh2 = MeshBuilder::new().icosahedron().build().unwrap();
+        let mut mesh1 = MeshBuilder::<()>::new().cube().build().unwrap();
+        let mut mesh2 = MeshBuilder::<()>::new().icosahedron().build().unwrap();
         mesh2.translate(vec3(0.5, 0.5, 0.5));
 
         mesh1.append(&mesh2);
@@ -536,8 +537,8 @@ mod tests {
     #[test]
     fn test_box_box_merge()
     {
-        let mut mesh1 = MeshBuilder::new().cube().build().unwrap();
-        let mut mesh2 = MeshBuilder::new().cube().build().unwrap();
+        let mut mesh1 = MeshBuilder::<()>::new().cube().build().unwrap();
+        let mut mesh2 = MeshBuilder::<()>::new().cube().build().unwrap();
         mesh2.translate(vec3(0.5, 0.5, 0.5));
 
         let (meshes1, meshes2) = mesh1.split_at_intersection(&mut mesh2);

@@ -15,15 +15,15 @@ pub type HalfEdgeIter = Box<dyn Iterator<Item = HalfEdgeID>>;
 pub type FaceIter = Box<dyn Iterator<Item = FaceID>>;
 
 /// An iterator over the half-edges starting in a given vertex. See [here](../struct.Mesh.html#method.vertex_halfedge_iter) for more information.
-pub struct VertexHalfedgeIter<'a>
+pub struct VertexHalfedgeIter<'a, T>
 {
-    walker: Walker<'a>,
+    walker: Walker<'a, T>,
     start: HalfEdgeID,
     is_done: bool
 }
 
-impl<'a> VertexHalfedgeIter<'a> {
-    pub(crate) fn new(vertex_id: VertexID, connectivity_info: &'a ConnectivityInfo) -> VertexHalfedgeIter<'a>
+impl<'a, T> VertexHalfedgeIter<'a, T> {
+    pub(crate) fn new(vertex_id: VertexID, connectivity_info: &'a ConnectivityInfo<T>) -> VertexHalfedgeIter<'a, T>
     {
         let walker = Walker::new(connectivity_info).into_vertex_halfedge_walker(vertex_id);
         let start = walker.halfedge_id().unwrap();
@@ -31,7 +31,7 @@ impl<'a> VertexHalfedgeIter<'a> {
     }
 }
 
-impl<'a> Iterator for VertexHalfedgeIter<'a> {
+impl<'a, T> Iterator for VertexHalfedgeIter<'a, T> {
     type Item = HalfEdgeID;
 
     fn next(&mut self) -> Option<HalfEdgeID>
@@ -57,20 +57,20 @@ impl<'a> Iterator for VertexHalfedgeIter<'a> {
 }
 
 /// An iterator over the three half-edges in a face. See [here](../struct.Mesh.html#method.face_halfedge_iter) for more information.
-pub struct FaceHalfedgeIter<'a>
+pub struct FaceHalfedgeIter<'a, T>
 {
-    walker: Walker<'a>,
+    walker: Walker<'a, T>,
     count: usize
 }
 
-impl<'a> FaceHalfedgeIter<'a> {
-    pub(crate) fn new(face_id: FaceID, connectivity_info: &'a ConnectivityInfo) -> FaceHalfedgeIter<'a>
+impl<'a, T> FaceHalfedgeIter<'a, T> {
+    pub(crate) fn new(face_id: FaceID, connectivity_info: &'a ConnectivityInfo<T>) -> FaceHalfedgeIter<'a, T>
     {
         FaceHalfedgeIter { walker: Walker::new(connectivity_info).into_face_halfedge_walker(face_id), count: 0 }
     }
 }
 
-impl<'a> Iterator for FaceHalfedgeIter<'a> {
+impl<'a, T> Iterator for FaceHalfedgeIter<'a, T> {
     type Item = HalfEdgeID;
 
     fn next(&mut self) -> Option<HalfEdgeID>
@@ -83,20 +83,20 @@ impl<'a> Iterator for FaceHalfedgeIter<'a> {
 }
 
 /// An iterator over the edges. See [here](../struct.Mesh.html#method.edge_iter) for more information.
-pub struct EdgeIter<'a>
+pub struct EdgeIter<'a, T>
 {
-    walker: Walker<'a>,
+    walker: Walker<'a, T>,
     iter: HalfEdgeIter
 }
 
-impl<'a> EdgeIter<'a> {
-    pub(crate) fn new(connectivity_info: &'a ConnectivityInfo) -> EdgeIter<'a>
+impl<'a, T> EdgeIter<'a, T> {
+    pub(crate) fn new(connectivity_info: &'a ConnectivityInfo<T>) -> EdgeIter<'a, T>
     {
         EdgeIter { walker: Walker::new(connectivity_info), iter: connectivity_info.halfedge_iterator() }
     }
 }
 
-impl<'a> Iterator for EdgeIter<'a> {
+impl<'a, T> Iterator for EdgeIter<'a, T> {
     type Item = HalfEdgeID;
 
     fn next(&mut self) -> Option<HalfEdgeID>
@@ -117,7 +117,7 @@ impl<'a> Iterator for EdgeIter<'a> {
 }
 
 /// # Iterators
-impl Mesh
+impl<T: Clone> Mesh<T>
 {
     ///
     /// Iterator over the vertex ids.
@@ -126,7 +126,7 @@ impl Mesh
     ///
     /// ```
     /// # use tri_mesh::prelude::*;
-    /// # let mesh = tri_mesh::MeshBuilder::new().cube().build().unwrap();
+    /// # let mesh = tri_mesh::MeshBuilder::<()>::new().cube().build().unwrap();
     /// let mut sum_vertex_positions = Vec3::zero();
     /// for vertex_id in mesh.vertex_iter() {
     ///     sum_vertex_positions += mesh.vertex_position(vertex_id);
@@ -147,7 +147,7 @@ impl Mesh
     ///
     /// ```
     /// # use tri_mesh::prelude::*;
-    /// # let mesh = tri_mesh::MeshBuilder::new().cube().build().unwrap();
+    /// # let mesh = tri_mesh::MeshBuilder::<()>::new().cube().build().unwrap();
     /// let mut halfedge_length_average = 0.0;
     /// let mut i = 0;
     /// for halfedge_id in mesh.halfedge_iter() {
@@ -172,7 +172,7 @@ impl Mesh
     ///
     /// ```
     /// # use tri_mesh::prelude::*;
-    /// # let mesh = tri_mesh::MeshBuilder::new().cube().build().unwrap();
+    /// # let mesh = tri_mesh::MeshBuilder::<()>::new().cube().build().unwrap();
     /// let mut edge_length_average = 0.0;
     /// let mut i = 0;
     /// for halfedge_id in mesh.edge_iter() {
@@ -183,7 +183,7 @@ impl Mesh
     /// # assert_eq!(i, 18);
     /// ```
     ///
-    pub fn edge_iter(&self) -> EdgeIter
+    pub fn edge_iter(&self) -> EdgeIter<T>
     {
         EdgeIter::new(&self.connectivity_info)
     }
@@ -195,7 +195,7 @@ impl Mesh
     ///
     /// ```
     /// # use tri_mesh::prelude::*;
-    /// # let mesh = tri_mesh::MeshBuilder::new().cube().build().unwrap();
+    /// # let mesh = tri_mesh::MeshBuilder::<()>::new().cube().build().unwrap();
     /// let mut sum_face_area = 0.0;
     /// for face_id in mesh.face_iter() {
     ///     sum_face_area += mesh.face_area(face_id);
@@ -218,7 +218,7 @@ impl Mesh
     ///
     /// ```
     /// # use tri_mesh::prelude::*;
-    /// # let mesh = tri_mesh::MeshBuilder::new().cube().build().unwrap();
+    /// # let mesh = tri_mesh::MeshBuilder::<()>::new().cube().build().unwrap();
     /// # let vertex_id = mesh.vertex_iter().next().unwrap();
     /// let mut one_ring_average_position = Vec3::zero();
     /// let mut i = 0;
@@ -230,7 +230,7 @@ impl Mesh
     /// one_ring_average_position /= i as f64;
     /// ```
     ///
-    pub fn vertex_halfedge_iter(&self, vertex_id: VertexID) -> VertexHalfedgeIter
+    pub fn vertex_halfedge_iter(&self, vertex_id: VertexID) -> VertexHalfedgeIter<T>
     {
         VertexHalfedgeIter::new(vertex_id, &self.connectivity_info)
     }
@@ -242,7 +242,7 @@ impl Mesh
     ///
     /// ```
     /// # use tri_mesh::prelude::*;
-    /// # let mesh = tri_mesh::MeshBuilder::new().cube().build().unwrap();
+    /// # let mesh = tri_mesh::MeshBuilder::<()>::new().cube().build().unwrap();
     /// # let face_id = mesh.face_iter().next().unwrap();
     /// let mut face_circumference = 0.0f64;
     /// for halfedge_id in mesh.face_halfedge_iter(face_id) {
@@ -251,7 +251,7 @@ impl Mesh
     /// # assert_eq!(face_circumference, 4.0f64 + 8.0f64.sqrt());
     /// ```
     ///
-    pub fn face_halfedge_iter(&self, face_id: FaceID) -> FaceHalfedgeIter
+    pub fn face_halfedge_iter(&self, face_id: FaceID) -> FaceHalfedgeIter<T>
     {
         FaceHalfedgeIter::new(face_id, &self.connectivity_info)
     }
@@ -264,7 +264,7 @@ mod tests {
 
     #[test]
     fn test_vertex_iterator() {
-        let mesh = MeshBuilder::new().subdivided_triangle().build().unwrap();
+        let mesh = MeshBuilder::<()>::new().subdivided_triangle().build().unwrap();
 
         let mut i = 0;
         for _ in mesh.vertex_iter() {
@@ -283,7 +283,7 @@ mod tests {
 
     #[test]
     fn test_halfedge_iterator() {
-        let mesh = MeshBuilder::new().subdivided_triangle().build().unwrap();
+        let mesh = MeshBuilder::<()>::new().subdivided_triangle().build().unwrap();
 
         let mut i = 0;
         for _ in mesh.halfedge_iter() {
@@ -302,7 +302,7 @@ mod tests {
 
     #[test]
     fn test_edge_iterator() {
-        let mesh = MeshBuilder::new().subdivided_triangle().build().unwrap();
+        let mesh = MeshBuilder::<()>::new().subdivided_triangle().build().unwrap();
 
         let mut i = 0;
         for _ in mesh.edge_iter() {
@@ -328,7 +328,7 @@ mod tests {
 
     #[test]
     fn test_face_iterator() {
-        let mesh = MeshBuilder::new().subdivided_triangle().build().unwrap();
+        let mesh = MeshBuilder::<()>::new().subdivided_triangle().build().unwrap();
 
         let mut i = 0;
         for _ in mesh.face_iter() {
@@ -347,7 +347,7 @@ mod tests {
 
     #[test]
     fn test_vertex_halfedge_iterator() {
-        let mesh = MeshBuilder::new().subdivided_triangle().build().unwrap();
+        let mesh = MeshBuilder::<()>::new().subdivided_triangle().build().unwrap();
 
         let mut i = 0;
         let vertex_id = mesh.vertex_iter().last().unwrap();
@@ -362,7 +362,7 @@ mod tests {
     fn test_vertex_halfedge_iterator_with_holes() {
         let indices: Vec<u32> = vec![0, 2, 3,  0, 4, 1,  0, 1, 2];
         let positions: Vec<f64> = vec![0.0; 5 * 3];
-        let mesh = Mesh::new(indices, positions);
+        let mesh = Mesh::new(indices, vec![(); 3], positions);
 
         let mut i = 0;
         for halfedge_id in mesh.vertex_halfedge_iter(VertexID::new(0)) {
@@ -375,7 +375,7 @@ mod tests {
 
     #[test]
     fn test_face_halfedge_iterator() {
-        let mesh = MeshBuilder::new().triangle().build().unwrap();
+        let mesh = MeshBuilder::<()>::new().triangle().build().unwrap();
         let mut i = 0;
         for halfedge_id in mesh.face_halfedge_iter(FaceID::new(0)) {
             let walker = mesh.walker_from_halfedge(halfedge_id);

@@ -5,7 +5,7 @@ use crate::mesh::math::*;
 use crate::mesh::ids::*;
 
 /// # Transformations
-impl Mesh
+impl<T: Clone> Mesh<T>
 {
     /// Moves the vertex to the specified position.
     pub fn move_vertex_to(&mut self, vertex_id: VertexID, value: Vec3)
@@ -28,7 +28,7 @@ impl Mesh
     /// # use tri_mesh::prelude::*;
     /// #
     /// # fn main() -> Result<(), Box<tri_mesh::mesh_builder::Error>> {
-    ///     let mut mesh = MeshBuilder::new().cube().build()?;
+    ///     let mut mesh = MeshBuilder::<()>::new().cube().build()?;
     /// #   let first_face_id = mesh.face_iter().next().unwrap();
     /// #   let face_area_before = mesh.face_area(first_face_id);
     ///     mesh.scale(2.0);
@@ -55,7 +55,7 @@ impl Mesh
     /// # use tri_mesh::prelude::*;
     /// #
     /// # fn main() -> Result<(), Box<tri_mesh::mesh_builder::Error>> {
-    ///     let mut mesh = MeshBuilder::new().cube().build()?;
+    ///     let mut mesh = MeshBuilder::<()>::new().cube().build()?;
     /// #   let first_face_id = mesh.face_iter().find(|f| mesh.face_normal(*f) == vec3(0.0, 1.0, 0.0)).unwrap();
     /// #   let second_face_id = mesh.face_iter().find(|f| mesh.face_normal(*f) == vec3(1.0, 0.0, 0.0)).unwrap();
     /// #   let face_area_before1 = mesh.face_area(first_face_id);
@@ -84,7 +84,7 @@ impl Mesh
     /// # use tri_mesh::prelude::*;
     /// #
     /// # fn main() -> Result<(), Box<tri_mesh::mesh_builder::Error>> {
-    ///     let mut mesh = MeshBuilder::new().cube().build()?;
+    ///     let mut mesh = MeshBuilder::<()>::new().cube().build()?;
     /// #   let first_vertex_id = mesh.vertex_iter().next().unwrap();
     /// #   let vertex_position_before = mesh.vertex_position(first_vertex_id);
     ///     mesh.translate(vec3(2.5, -1.0, 0.0));
@@ -111,7 +111,7 @@ impl Mesh
     /// # use tri_mesh::prelude::*;
     /// #
     /// # fn main() -> Result<(), Box<tri_mesh::mesh_builder::Error>> {
-    ///     let mut mesh = MeshBuilder::new().cube().build()?;
+    ///     let mut mesh = MeshBuilder::<()>::new().cube().build()?;
     /// #   let first_vertex_id = mesh.vertex_iter().next().unwrap();
     /// #   let vertex_position_before = mesh.vertex_position(first_vertex_id);
     ///     mesh.apply_transformation(Mat4::from_angle_y(Deg(360.0)));
@@ -139,7 +139,7 @@ impl Mesh
     /// # use tri_mesh::prelude::*;
     /// #
     /// # fn main() -> Result<(), Box<tri_mesh::mesh_builder::Error>> {
-    ///     let mut mesh = MeshBuilder::new().cube().build()?;
+    ///     let mut mesh = MeshBuilder::<()>::new().cube().build()?;
     /// #   let first_vertex_id = mesh.vertex_iter().next().unwrap();
     /// #   let vertex_position_before = mesh.vertex_position(first_vertex_id);
     ///     mesh.apply_transformation(Mat4::from_translation(vec3(2.5, -1.0, 0.0)));

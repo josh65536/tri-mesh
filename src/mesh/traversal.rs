@@ -8,28 +8,28 @@ use crate::mesh::connectivity_info::{HalfEdge, ConnectivityInfo};
 /// # Traversal
 /// Methods to construct a [Walker](crate::mesh::traversal::Walker) which is used for easy and efficient traversal of the mesh.
 /// See [Walker](crate::mesh::traversal::Walker) for more information and examples.
-impl Mesh
+impl<T: Clone> Mesh<T>
 {
     /// Creates an 'empty' [walker](crate::mesh::traversal::Walker), ie. a walker that is associated with any half-edge.
-    pub(crate) fn walker(&self) -> Walker
+    pub(crate) fn walker(&self) -> Walker<T>
     {
         Walker::new(&self.connectivity_info)
     }
 
     /// Creates a [walker](crate::mesh::traversal::Walker) at the half-edge pointed to by the given vertex.
-    pub fn walker_from_vertex(&self, vertex_id: VertexID) -> Walker
+    pub fn walker_from_vertex(&self, vertex_id: VertexID) -> Walker<T>
     {
         self.walker().into_vertex_halfedge_walker(vertex_id)
     }
 
     /// Creates a [walker](crate::mesh::traversal::Walker) at the given half-edge.
-    pub fn walker_from_halfedge(&self, halfedge_id: HalfEdgeID) -> Walker
+    pub fn walker_from_halfedge(&self, halfedge_id: HalfEdgeID) -> Walker<T>
     {
         self.walker().into_halfedge_walker(halfedge_id)
     }
 
     /// Creates a [walker](crate::mesh::traversal::Walker) at the half-edge pointed to by the given face.
-    pub fn walker_from_face(&self, face_id: FaceID) -> Walker
+    pub fn walker_from_face(&self, face_id: FaceID) -> Walker<T>
     {
         self.walker().into_face_halfedge_walker(face_id)
     }
@@ -48,7 +48,7 @@ impl Mesh
 /// ## \# 1
 ///
 /// ```
-/// # let mesh = tri_mesh::MeshBuilder::new().cube().build().unwrap();
+/// # let mesh = tri_mesh::MeshBuilder::<()>::new().cube().build().unwrap();
 /// # let halfedge_id = mesh.halfedge_iter().next().unwrap();
 /// // Find the id of the vertex pointed to by a half-edge.
 /// let vertex_id = mesh.walker_from_halfedge(halfedge_id).vertex_id().unwrap();
@@ -57,7 +57,7 @@ impl Mesh
 /// ## \# 2
 ///
 /// ```
-/// # let mesh = tri_mesh::MeshBuilder::new().cube().build().unwrap();
+/// # let mesh = tri_mesh::MeshBuilder::<()>::new().cube().build().unwrap();
 /// # let halfedge_id = mesh.halfedge_iter().next().unwrap();
 /// let mut walker = mesh.walker_from_halfedge(halfedge_id);
 /// // Walk around the three sides of a face..
@@ -68,7 +68,7 @@ impl Mesh
 /// ## \# 3
 ///
 /// ```
-/// # let mesh = tri_mesh::MeshBuilder::new().cube().build().unwrap();
+/// # let mesh = tri_mesh::MeshBuilder::<()>::new().cube().build().unwrap();
 /// # let face_id = mesh.face_iter().next().unwrap();
 /// // Find one neighbouring face to the given face
 /// let neighbour_face_id = mesh.walker_from_face(face_id).into_twin().face_id().unwrap();
@@ -77,7 +77,7 @@ impl Mesh
 /// ## \# 4
 ///
 /// ```
-/// # let mesh = tri_mesh::MeshBuilder::new().cube().build().unwrap();
+/// # let mesh = tri_mesh::MeshBuilder::<()>::new().cube().build().unwrap();
 /// # let face_id = mesh.face_iter().next().unwrap();
 /// // Find the circumference of the face
 /// let mut walker = mesh.walker_from_face(face_id);
@@ -91,7 +91,7 @@ impl Mesh
 /// ## \# 5
 ///
 /// ```
-/// # let mesh = tri_mesh::MeshBuilder::new().cube().build().unwrap();
+/// # let mesh = tri_mesh::MeshBuilder::<()>::new().cube().build().unwrap();
 /// # let halfedge_id = mesh.halfedge_iter().next().unwrap();
 /// // Check if the half-edge is on the boundary of the mesh
 /// let mut walker = mesh.walker_from_halfedge(halfedge_id);
@@ -103,7 +103,7 @@ impl Mesh
 ///
 /// ```
 /// # use tri_mesh::prelude::*;
-/// # let mesh = tri_mesh::MeshBuilder::new().cube().build().unwrap();
+/// # let mesh = tri_mesh::MeshBuilder::<()>::new().cube().build().unwrap();
 /// // Compute the average edge length
 /// let mut avg_edge_length = 0.0f64;
 /// for halfedge_id in mesh.edge_iter()
@@ -117,16 +117,16 @@ impl Mesh
 /// ```
 ///
 #[derive(Clone, Debug)]
-pub struct Walker<'a>
+pub struct Walker<'a, T>
 {
-    connectivity_info: &'a ConnectivityInfo,
+    connectivity_info: &'a ConnectivityInfo<T>,
     current: Option<HalfEdgeID>,
     current_info: Option<HalfEdge>
 }
 
-impl<'a> Walker<'a>
+impl<'a, T> Walker<'a, T>
 {
-    pub(crate) fn new(connectivity_info: &'a ConnectivityInfo) -> Self
+    pub(crate) fn new(connectivity_info: &'a ConnectivityInfo<T>) -> Self
     {
         Walker {current: None, current_info: None, connectivity_info: connectivity_info}
     }

@@ -5,8 +5,12 @@ use crate::mesh::math::*;
 use crate::mesh::ids::*;
 
 /// # Face measures
-impl Mesh
+impl<T: Clone> Mesh<T>
 {
+    pub fn face_tag(&self, face_id: FaceID) -> T {
+        self.connectivity_info.face_tag(face_id)
+    }
+
     /// Returns the positions of the face vertices.
     pub fn face_positions(&self, face_id: FaceID) -> (Vec3, Vec3, Vec3)
     {
@@ -61,14 +65,14 @@ mod tests {
 
     #[test]
     fn test_face_area() {
-        let mesh = MeshBuilder::new().triangle().build().unwrap();
+        let mesh = MeshBuilder::<()>::new().triangle().build().unwrap();
         let face_id = mesh.face_iter().next().unwrap();
         assert_eq!(9.0, mesh.face_area(face_id));
     }
 
     #[test]
     fn test_face_normal() {
-        let mesh = MeshBuilder::new().triangle().build().unwrap();
+        let mesh = MeshBuilder::<()>::new().triangle().build().unwrap();
         let face_id = mesh.face_iter().next().unwrap();
         let computed_normal = mesh.face_normal(face_id);
         assert_eq!(0.0, computed_normal.x);
@@ -78,7 +82,7 @@ mod tests {
 
     #[test]
     fn test_face_center() {
-        let mesh = MeshBuilder::new().triangle().build().unwrap();
+        let mesh = MeshBuilder::<()>::new().triangle().build().unwrap();
         let face_id = mesh.face_iter().next().unwrap();
         let center = mesh.face_center(face_id);
         assert_eq!(0.0, center.x);

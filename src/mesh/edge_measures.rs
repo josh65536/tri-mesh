@@ -5,7 +5,7 @@ use crate::mesh::math::*;
 use crate::mesh::ids::*;
 
 /// # Edge measures
-impl Mesh
+impl<T: Clone> Mesh<T>
 {
     ///
     /// Returns the two positions of the vertices of either end of the given halfedge.

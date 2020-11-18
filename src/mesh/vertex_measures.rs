@@ -5,7 +5,7 @@ use crate::mesh::math::*;
 use crate::mesh::ids::*;
 
 /// # Vertex measures
-impl Mesh
+impl<T: Clone> Mesh<T>
 {
     /// Returns the vertex position.
     pub fn vertex_position(&self, vertex_id: VertexID) -> Vec3
@@ -35,7 +35,7 @@ mod tests {
     
     #[test]
     fn test_vertex_normal() {
-        let mesh = MeshBuilder::new().subdivided_triangle().build().unwrap();
+        let mesh = MeshBuilder::<()>::new().subdivided_triangle().build().unwrap();
         let computed_normal = mesh.vertex_normal(VertexID::new(0));
         assert_eq!(0.0, computed_normal.x);
         assert_eq!(0.0, computed_normal.y);

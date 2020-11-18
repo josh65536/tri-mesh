@@ -3,7 +3,7 @@ use tri_mesh::prelude::*;
 
 #[derive(Debug)]
 pub struct StitchOperation {
-    mesh: Mesh
+    mesh: Mesh<()>
 }
 
 impl StitchOperation {
@@ -16,7 +16,7 @@ impl StitchOperation {
         Self {mesh}
     }
 
-    pub fn apply(&mut self, mesh: &Mesh, ray_start_point: &Vec3, ray_direction: &Vec3) -> Option<Mesh>
+    pub fn apply(&mut self, mesh: &Mesh<()>, ray_start_point: &Vec3, ray_direction: &Vec3) -> Option<Mesh<()>>
     {
         if let Some(Intersection::Point {point, ..}) = mesh.ray_intersection(ray_start_point, ray_direction) {
             // Translate

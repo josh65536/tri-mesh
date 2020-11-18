@@ -12,14 +12,14 @@ impl MorphOperation {
         Self { weights: None }
     }
 
-    pub fn start(&mut self, mesh: &Mesh, ray_start_point: &Vec3, ray_direction: &Vec3) -> bool {
+    pub fn start(&mut self, mesh: &Mesh<()>, ray_start_point: &Vec3, ray_direction: &Vec3) -> bool {
         if let Some((vertex_id, point)) = Self::pick(&mesh,&ray_start_point, &ray_direction) {
             self.weights = Some(Self::compute_weights(mesh, vertex_id, &point));
         }
         self.weights.is_some()
     }
 
-    pub fn update(&mut self, mesh: &mut Mesh, factor: f64)
+    pub fn update(&mut self, mesh: &mut Mesh<()>, factor: f64)
     {
         if let Some(ref weights) = self.weights {
             for (vertex_id, weight) in weights {
@@ -33,7 +33,7 @@ impl MorphOperation {
     }
 
     /// Picking used for determining whether a mouse click starts a morph operation. Returns a close vertex and the position of the click on the mesh surface.
-    fn pick(mesh: &Mesh, ray_start_point: &Vec3, ray_direction: &Vec3) -> Option<(VertexID, Vec3)>
+    fn pick(mesh: &Mesh<()>, ray_start_point: &Vec3, ray_direction: &Vec3) -> Option<(VertexID, Vec3)>
     {
         use tri_mesh::prelude::*;
         if let Some(Intersection::Point {primitive, point}) = mesh.ray_intersection(ray_start_point, ray_direction) {
@@ -55,7 +55,7 @@ impl MorphOperation {
     }
 
     /// Compute a directional weight for each vertex to be used for the morph operation.
-    fn compute_weights(mesh: &Mesh, start_vertex_id: VertexID, start_point: &Vec3) -> HashMap<VertexID, Vec3>
+    fn compute_weights(mesh: &Mesh<()>, start_vertex_id: VertexID, start_point: &Vec3) -> HashMap<VertexID, Vec3>
     {
         use tri_mesh::prelude::*;
         static SQR_MAX_DISTANCE: f64 = 1.0;

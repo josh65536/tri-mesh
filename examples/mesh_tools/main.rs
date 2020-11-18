@@ -38,7 +38,7 @@ fn main()
                                    &dir, 25.0, 0.1, 0.001, 0.0001).unwrap();
 
     // Plane
-    let mut plane_mesh = tri_mesh::MeshBuilder::new().plane().build().unwrap();
+    let mut plane_mesh = tri_mesh::MeshBuilder::<()>::new().plane().build().unwrap();
     plane_mesh.scale(100.0);
     let mut plane = Mesh::new(&gl, &plane_mesh.indices_buffer(), &plane_mesh.positions_buffer_f32(), &plane_mesh.normals_buffer_f32()).unwrap();
     plane.color = vec3(0.8, 0.8, 0.8);
@@ -170,7 +170,7 @@ pub struct DrawableMesh {
 }
 
 impl DrawableMesh {
-    pub fn new(gl: &Gl, mesh: &tri_mesh::mesh::Mesh) -> Self
+    pub fn new(gl: &Gl, mesh: &tri_mesh::mesh::Mesh<()>) -> Self
     {
         let positions: Vec<f32> = mesh.positions_buffer().iter().map(|v| *v as f32).collect();
         let normals: Vec<f32> = mesh.normals_buffer().iter().map(|v| *v as f32).collect();
@@ -190,7 +190,7 @@ impl DrawableMesh {
         Self { wireframe, model }
     }
 
-    pub fn update(&mut self, mesh: &tri_mesh::mesh::Mesh)
+    pub fn update(&mut self, mesh: &tri_mesh::mesh::Mesh<()>)
     {
         let positions: Vec<f32> = mesh.positions_buffer().iter().map(|v| *v as f32).collect();
         let normals: Vec<f32> = mesh.normals_buffer().iter().map(|v| *v as f32).collect();

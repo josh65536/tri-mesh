@@ -3,7 +3,7 @@
 use crate::mesh::*;
 
 /// # Validity
-impl Mesh
+impl<T: Clone> Mesh<T>
 {
     ///
     /// WARNING: DO NOT USE IN PRODUCTION!
