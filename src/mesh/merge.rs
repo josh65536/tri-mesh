@@ -45,7 +45,7 @@ impl<T: Clone> Mesh<T>
             let vertex_id0 = get_or_create_vertex(self, vertex_ids.0);
             let vertex_id1 = get_or_create_vertex(self, vertex_ids.1);
             let vertex_id2 = get_or_create_vertex(self, vertex_ids.2);
-            let tag = self.face_tag(other_face_id);
+            let tag = other.face_tag(other_face_id);
             let new_face_id = self.connectivity_info.create_face(vertex_id0, vertex_id1, vertex_id2, tag);
 
             for halfedge_id in other.face_halfedge_iter(other_face_id) {
