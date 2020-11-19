@@ -182,7 +182,7 @@ fn split_at_intersections<T: Clone, U: Clone>(mesh1: &mut Mesh<T>, mesh2: &mut M
                     Primitive::Vertex(vertex_id) => { vertex_id },
                     Primitive::Edge(split_edge) => {
                         let (v0, v1) = mesh1.edge_vertices(split_edge);
-                        let vertex_id = mesh1.split_edge(split_edge, point);
+                        let vertex_id = mesh1.split_edge(split_edge, point).0;
 
                         if !edge_splits1.contains_key(&edge) { edge_splits1.insert(edge, HashSet::new()); }
                         let list = edge_splits1.get_mut(&edge).unwrap();
@@ -212,7 +212,7 @@ fn split_at_intersections<T: Clone, U: Clone>(mesh1: &mut Mesh<T>, mesh2: &mut M
                     Primitive::Vertex(vertex_id) => { vertex_id },
                     Primitive::Edge(split_edge) => {
                         let (v0, v1) = mesh2.edge_vertices(split_edge);
-                        let vertex_id = mesh2.split_edge(split_edge, point);
+                        let vertex_id = mesh2.split_edge(split_edge, point).0;
 
                         if !edge_splits2.contains_key(&edge) { edge_splits2.insert(edge, HashSet::new()); }
                         let list = edge_splits2.get_mut(&edge).unwrap();

@@ -68,7 +68,9 @@ impl<T: Clone> Mesh<T>
 
     /// Split the given edge into two.
     /// Returns the id of the new vertex positioned at the given position.
-    pub fn split_edge(&mut self, halfedge_id: HalfEdgeID, position: Vec3) -> VertexID
+    /// Also returns the half-edge ID of the new segment on the split edge.
+    /// This is the segment that starts at the split and ends at the old half-edge's old vertex.
+    pub fn split_edge(&mut self, halfedge_id: HalfEdgeID, position: Vec3) -> (VertexID, HalfEdgeID)
     {
         let mut walker = self.walker_from_halfedge(halfedge_id);
         if walker.face_id().is_none()
@@ -83,7 +85,7 @@ impl<T: Clone> Mesh<T>
         let is_boundary = walker.face_id().is_none();
 
         let new_vertex_id = self.create_vertex(position);
-        self.split_one_face(split_halfedge_id, twin_halfedge_id, new_vertex_id);
+        let farther_halfedge = self.split_one_face(split_halfedge_id, twin_halfedge_id, new_vertex_id);
 
         if !is_boundary {
             self.split_one_face(twin_halfedge_id, split_halfedge_id, new_vertex_id);
@@ -94,7 +96,7 @@ impl<T: Clone> Mesh<T>
             self.connectivity_info.set_halfedge_vertex(twin_halfedge_id, new_vertex_id);
         };
 
-        new_vertex_id
+        (new_vertex_id, farther_halfedge)
     }
 
     /// Split the given face into three new faces.
@@ -148,7 +150,7 @@ impl<T: Clone> Mesh<T>
         new_vertex_id
     }
 
-    fn split_one_face(&mut self, halfedge_id: HalfEdgeID, twin_halfedge_id: HalfEdgeID, new_vertex_id: VertexID)
+    fn split_one_face(&mut self, halfedge_id: HalfEdgeID, twin_halfedge_id: HalfEdgeID, new_vertex_id: VertexID) -> HalfEdgeID
     {
         let mut walker = self.walker_from_halfedge(halfedge_id);
         let vertex_id1 = walker.vertex_id().unwrap();
@@ -162,6 +164,7 @@ impl<T: Clone> Mesh<T>
 
         // Create new face
         let new_face_id = self.connectivity_info.create_face_with_existing_halfedge(vertex_id1, halfedge_to_reuse_vertex, new_vertex_id, halfedge_to_reuse, tag);
+        let split_halfedge = self.face_halfedge_iter(new_face_id).nth(1).unwrap();
 
         // Update old face
         let new_halfedge_id = self.connectivity_info.new_halfedge(Some(halfedge_to_reuse_vertex), Some(halfedge_to_reuse_next), Some(old_face_id));
@@ -179,6 +182,8 @@ impl<T: Clone> Mesh<T>
                 self.connectivity_info.set_halfedge_twin(new_halfedge_id, halfedge_id);
             }
         }
+
+        split_halfedge
     }
 
     ///
@@ -412,6 +417,28 @@ mod tests {
     }
 
     #[test]
+    fn test_split_edge_simple()
+    {
+        let mut mesh = MeshBuilder::<()>::new().with_positions(vec![
+            0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 2.0, 0.0,
+        ]).with_indices(vec![0, 1, 2]).build().unwrap();
+
+        let (_, halfedge_id) = mesh.split_edge(HalfEdgeID::new(0), Vec3::unit_x());
+        assert_eq!(HalfEdgeID::new(6), halfedge_id);
+    }
+
+    #[test]
+    fn test_split_edge_complex()
+    {
+        let mut mesh = MeshBuilder::<()>::new().with_positions(vec![
+            0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 2.0, 0.0, 2.0, 2.0, 0.0
+        ]).with_indices(vec![0, 1, 2, 3, 2, 1]).build().unwrap();
+
+        let (_, halfedge_id) = mesh.split_edge(HalfEdgeID::new(2), Vec3::unit_x() + Vec3::unit_y());
+        assert_eq!(HalfEdgeID::new(10), halfedge_id);
+    }
+
+    #[test]
     fn test_split_edge_on_boundary()
     {
         let mut mesh = MeshBuilder::<()>::new().triangle().build().unwrap();
@@ -460,7 +487,7 @@ mod tests {
             let mut walker = mesh.walker_from_halfedge(halfedge_id);
             if walker.face_id().is_some() && walker.as_twin().face_id().is_some()
             {
-                let vertex_id = mesh.split_edge(halfedge_id, vec3(-1.0, -1.0, -1.0));
+                let vertex_id = mesh.split_edge(halfedge_id, vec3(-1.0, -1.0, -1.0)).0;
                 assert_eq!(mesh.num_vertices(), 5);
                 assert_eq!(mesh.num_halfedges(), 4 * 3 + 4);
                 assert_eq!(mesh.num_faces(), 4);
