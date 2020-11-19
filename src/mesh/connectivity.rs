@@ -43,12 +43,13 @@ impl<T: Clone> Mesh<T>
     }
 
     /// Returns the vertex id of the two adjacent vertices to the given edge.
+    /// The vertices are returned in order of the direction the edge is pointing.
     pub fn edge_vertices(&self, halfedge_id: HalfEdgeID) -> (VertexID, VertexID)
     {
         let mut walker = self.walker_from_halfedge(halfedge_id);
         let v1 = walker.vertex_id().unwrap();
         let v2 = walker.as_twin().vertex_id().unwrap();
-        (v1, v2)
+        (v2, v1)
     }
 
     /// Returns the vertex id of the two adjacent vertices to the given edge

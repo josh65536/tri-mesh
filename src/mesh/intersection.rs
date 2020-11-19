@@ -336,7 +336,7 @@ mod tests {
         let point = vec3(0.3, 0.0, 0.0);
         let mesh = MeshBuilder::<()>::new().with_indices((0..3).collect()).with_positions(vec![0.0, 0.0, 0.0, 0.0, 0.0, 1.0, 1.0, 0.0, 0.0]).build().unwrap();
         let face_id = mesh.face_iter().next().unwrap();
-        let halfedge_id = mesh.face_halfedge_iter(face_id).find(|e| (vec3(0.0, 0.0, 0.0), vec3(1.0, 0.0, 0.0)) == mesh.edge_positions(*e) ).unwrap();
+        let halfedge_id = mesh.face_halfedge_iter(face_id).find(|e| (vec3(1.0, 0.0, 0.0), vec3(0.0, 0.0, 0.0)) == mesh.edge_positions(*e) ).unwrap();
         let (p0, p1) = (point + vec3(0.0, 0.1, 0.0), point + vec3(0.0, -0.1, 0.0));
 
         let result = mesh.face_line_piece_intersection(face_id, &p0, &p1);
