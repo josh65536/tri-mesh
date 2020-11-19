@@ -12,7 +12,7 @@ impl<T: Clone> Mesh<T>
     ///
     pub fn edge_positions(&self, halfedge_id: HalfEdgeID) -> (Vec3, Vec3)
     {
-        let vertices = self.ordered_edge_vertices(halfedge_id);
+        let vertices = self.edge_vertices(halfedge_id);
         (self.vertex_position(vertices.0), self.vertex_position(vertices.1))
     }
 

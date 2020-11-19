@@ -15,7 +15,7 @@ impl<T: Clone> Mesh<T>
     /// Returns the positions of the face vertices.
     pub fn face_positions(&self, face_id: FaceID) -> (Vec3, Vec3, Vec3)
     {
-        let vertices = self.ordered_face_vertices(face_id);
+        let vertices = self.face_vertices(face_id);
         (self.vertex_position(vertices.0), self.vertex_position(vertices.1), self.vertex_position(vertices.2))
     }
 
