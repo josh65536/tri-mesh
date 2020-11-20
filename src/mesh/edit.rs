@@ -74,8 +74,9 @@ impl<T: Clone> Mesh<T>
     pub fn split_edge(&mut self, halfedge_id: HalfEdgeID, position: Vec3) -> (VertexID, HalfEdgeID)
     {
         let mut walker = self.walker_from_halfedge(halfedge_id);
-        if walker.face_id().is_none()
-        {
+        let mut twinned = false;
+        if walker.face_id().is_none() {
+            twinned = true;
             walker.as_twin();
         }
         let split_halfedge_id = walker.halfedge_id().unwrap();
@@ -86,7 +87,7 @@ impl<T: Clone> Mesh<T>
         let is_boundary = walker.face_id().is_none();
 
         let new_vertex_id = self.create_vertex(position);
-        let farther_halfedge = self.split_one_face(split_halfedge_id, twin_halfedge_id, new_vertex_id);
+        let mut farther_halfedge = self.split_one_face(split_halfedge_id, twin_halfedge_id, new_vertex_id);
 
         if !is_boundary {
             self.split_one_face(twin_halfedge_id, split_halfedge_id, new_vertex_id);
@@ -96,6 +97,11 @@ impl<T: Clone> Mesh<T>
             self.connectivity_info.set_halfedge_twin(split_halfedge_id, new_halfedge_id);
             self.connectivity_info.set_halfedge_vertex(twin_halfedge_id, new_vertex_id);
         };
+
+        // Wrong direction; get the farther halfedge going in the other direction
+        if twinned {
+            farther_halfedge = self.walker_from_halfedge(split_halfedge_id).twin_id().unwrap();
+        }
 
         (new_vertex_id, farther_halfedge)
     }
@@ -431,25 +437,37 @@ mod tests {
     }
 
     #[test]
-    fn test_split_edge_simple()
+    fn test_split_edge_boundary()
     {
         let mut mesh = MeshBuilder::<()>::new().with_positions(vec![
             0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 2.0, 0.0,
         ]).with_indices(vec![0, 1, 2]).build().unwrap();
 
         let (_, halfedge_id) = mesh.split_edge(HalfEdgeID::new(0), Vec3::unit_x());
-        assert_eq!(HalfEdgeID::new(6), halfedge_id);
+        assert_eq!((VertexID::new(3), VertexID::new(1)), mesh.edge_vertices(halfedge_id));
     }
 
     #[test]
-    fn test_split_edge_complex()
+    fn test_split_edge_boundary_reverse()
+    {
+        let mut mesh = MeshBuilder::<()>::new().with_positions(vec![
+            0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 2.0, 0.0,
+        ]).with_indices(vec![0, 1, 2]).build().unwrap();
+
+        // Same edge, different direction
+        let (_, halfedge_id) = mesh.split_edge(HalfEdgeID::new(3), Vec3::unit_x());
+        assert_eq!((VertexID::new(3), VertexID::new(0)), mesh.edge_vertices(halfedge_id));
+    }
+
+    #[test]
+    fn test_split_edge_inside()
     {
         let mut mesh = MeshBuilder::<()>::new().with_positions(vec![
             0.0, 0.0, 0.0, 2.0, 0.0, 0.0, 0.0, 2.0, 0.0, 2.0, 2.0, 0.0
         ]).with_indices(vec![0, 1, 2, 3, 2, 1]).build().unwrap();
 
         let (_, halfedge_id) = mesh.split_edge(HalfEdgeID::new(2), Vec3::unit_x() + Vec3::unit_y());
-        assert_eq!(HalfEdgeID::new(10), halfedge_id);
+        assert_eq!((VertexID::new(4), VertexID::new(2)), mesh.edge_vertices(halfedge_id));
     }
 
     #[test]
