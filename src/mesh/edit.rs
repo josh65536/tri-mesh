@@ -268,18 +268,16 @@ impl<T: Clone> Mesh<T>
 
     }
 
-    /// Removes the given vertex and all edges and faces it's adjacent to.
-    pub fn remove_vertex(&mut self, vertex_id: VertexID)
+    /// Removes the given vertex and all edges and faces it's adjacent to,
+    /// assuming it's a manifold vertex.
+    pub fn remove_manifold_vertex(&mut self, vertex_id: VertexID)
     {
-        // Loop to deal with non-manifold vertices
-        while self.connectivity_info.vertex_exists(vertex_id) {
-            let faces = self.vertex_halfedge_iter(vertex_id)
-                .flat_map(|e| self.walker_from_halfedge(e).face_id())
-                .collect::<Vec<_>>();
+        let faces = self.vertex_halfedge_iter(vertex_id)
+            .flat_map(|e| self.walker_from_halfedge(e).face_id())
+            .collect::<Vec<_>>();
 
-            for face in faces {
-                self.remove_face(face);
-            }
+        for face in faces {
+            self.remove_face(face);
         }
     }
 
