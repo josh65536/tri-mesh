@@ -9,14 +9,15 @@ impl<T: Clone> Mesh<T>
 {
     /// Flip the given edge such that the edge after the flip is connected to the
     /// other pair of the four vertices connected to the two adjacent faces.
+    /// The edge flips counterclockwise.
     ///
     /// ```text
     ///   /\          /|\
     ///  /  \        / | \
-    /// /____\  --> /  |  \
-    /// \    /      \  |  /
+    /// /,___\  --> /  |  \
+    /// \`   /      \  |  /
     ///  \  /        \ | /
-    ///   \/          \|/
+    ///   \/          \v/
     /// ```
     ///
     /// # Error
@@ -265,6 +266,21 @@ impl<T: Clone> Mesh<T>
 
         walker.as_twin();
 
+    }
+
+    /// Removes the given vertex and all edges and faces it's adjacent to.
+    pub fn remove_vertex(&mut self, vertex_id: VertexID)
+    {
+        // Loop to deal with non-manifold vertices
+        while self.connectivity_info.vertex_exists(vertex_id) {
+            let faces = self.vertex_halfedge_iter(vertex_id)
+                .flat_map(|e| self.walker_from_halfedge(e).face_id())
+                .collect::<Vec<_>>();
+
+            for face in faces {
+                self.remove_face(face);
+            }
+        }
     }
 
     /// Removes the given face and the adjacent edges if they are then not connected to any face.

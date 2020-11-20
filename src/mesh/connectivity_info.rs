@@ -168,6 +168,11 @@ impl<T> ConnectivityInfo<T> {
         RefCell::borrow(&self.faces).iter()
     }
 
+    pub(crate) fn vertex_exists(&self, vertex_id: VertexID) -> bool
+    {
+        RefCell::borrow(&self.vertices).get(vertex_id).is_some()
+    }
+
     pub fn vertex_halfedge(&self, vertex_id: VertexID) -> Option<HalfEdgeID>
     {
         RefCell::borrow(&self.vertices).get(vertex_id).unwrap().halfedge.clone()
