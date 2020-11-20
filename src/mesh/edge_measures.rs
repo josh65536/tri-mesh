@@ -17,6 +17,15 @@ impl<T: Clone> Mesh<T>
     }
 
     ///
+    /// Returns the direction of the given halfedge.
+    ///
+    pub fn edge_vector(&self, halfedge_id: HalfEdgeID) -> Vec3
+    {
+        let positions = self.edge_positions(halfedge_id);
+        positions.1 - positions.0
+    }
+
+    ///
     /// Returns the length of the specified edge
     ///
     pub fn edge_length(&self, halfedge_id: HalfEdgeID) -> f64
