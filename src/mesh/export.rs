@@ -246,7 +246,7 @@ impl<T: Clone> Mesh<T>
             let mut face = String::new();
             for j in 0..3 {
                 let index = indices[i*3 + j] + 1;
-                face += &format!("{}//{}", index, index);
+                face += &format!(" {}//{}", index, index);
             }
             output += &format!("f{}\n", face);
         }
