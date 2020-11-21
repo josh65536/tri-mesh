@@ -232,13 +232,13 @@ impl<T: Clone> Mesh<T>
         let positions = self.positions_buffer();
         for i in 0..self.num_vertices()
         {
-            output = format!("{}v {} {} {}\n", output, positions[i*3], positions[i*3 + 1], positions[i*3 + 2]);
+            output += &format!("v {} {} {}\n", positions[i*3], positions[i*3 + 1], positions[i*3 + 2]);
         }
 
         let normals = self.normals_buffer();
         for i in 0..self.num_vertices()
         {
-            output = format!("{}vn {} {} {}\n", output, normals[i*3], normals[i*3 + 1], normals[i*3 + 2]);
+            output += &format!("vn {} {} {}\n", normals[i*3], normals[i*3 + 1], normals[i*3 + 2]);
         }
 
         let indices = self.indices_buffer();
@@ -246,9 +246,9 @@ impl<T: Clone> Mesh<T>
             let mut face = String::new();
             for j in 0..3 {
                 let index = indices[i*3 + j] + 1;
-                face = format!("{} {}//{}", face, index, index);
+                face += &format!("{}//{}", index, index);
             }
-            output = format!("{}f{}\n", output, face);
+            output += &format!("f{}\n", face);
         }
         output
     }
