@@ -74,7 +74,7 @@ impl<T: Clone> Mesh<T>
             face_mapping.insert(other_face_id, new_face_id);
         }
 
-        self.create_boundary_edges();
+        self.create_boundary_edges_for_faces(&face_mapping.values().copied().collect::<Vec<_>>());
     }
 
     ///

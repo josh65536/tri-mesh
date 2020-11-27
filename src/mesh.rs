@@ -46,7 +46,7 @@ use crate::mesh::connectivity_info::ConnectivityInfo;
 use crate::mesh::ids::*;
 use crate::mesh::math::*;
 
-use std::collections::HashMap;
+use std::collections::{HashMap, HashSet};
 
 /// Mesh errors.
 #[derive(Debug)]
@@ -217,6 +217,24 @@ impl<T: Clone> Mesh<T>
     {
         let mut walker = self.walker();
         for halfedge_id in self.halfedge_iter()
+        {
+            walker.as_halfedge_walker(halfedge_id);
+            if walker.twin_id().is_none()
+            {
+                let boundary_halfedge_id = self.connectivity_info.new_halfedge(walker.as_previous().vertex_id(), None, None);
+                self.connectivity_info.set_halfedge_twin(halfedge_id, boundary_halfedge_id);
+            }
+        }
+    }
+
+    /// to avoid a Schlemiel the painter's algorithm when appending meshes
+    fn create_boundary_edges_for_faces(&mut self, faces: &[FaceID])
+    {
+        let mut walker = self.walker();
+        for halfedge_id in faces.iter().copied()
+            .flat_map(|f| self.face_halfedge_iter(f))
+            .collect::<HashSet<_>>()
+            .into_iter()
         {
             walker.as_halfedge_walker(halfedge_id);
             if walker.twin_id().is_none()
