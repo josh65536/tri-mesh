@@ -3,6 +3,8 @@
 use crate::mesh::Mesh;
 use crate::mesh::ids::*;
 
+use std::collections::HashMap;
+
 ///
 /// # Export
 ///
@@ -85,12 +87,17 @@ impl<T: Clone> Mesh<T>
     pub fn indices_buffer(&self) -> Vec<u32>
     {
         let vertices: Vec<VertexID> = self.vertex_iter().collect();
+        let index_map = vertices.into_iter()
+            .enumerate()
+            .map(|(i, v)| (v, i))
+            .collect::<HashMap<_, _>>();
+
         let mut indices = Vec::with_capacity(self.num_faces() * 3);
         for face_id in self.face_iter()
         {
             for halfedge_id in self.face_halfedge_iter(face_id) {
                 let vertex_id = self.walker_from_halfedge(halfedge_id).vertex_id().unwrap();
-                let index = vertices.iter().position(|v| v == &vertex_id).unwrap();
+                let index = index_map[&vertex_id];
                 indices.push(index as u32);
             }
         }
