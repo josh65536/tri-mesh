@@ -182,6 +182,25 @@ impl<T: Clone + Default> MeshBuilder<T> {
     }
 
     ///
+    /// Parses the .obj file and extracts the connectivity information (indices) and positions which is used to construct a mesh when the `build` method is called,
+    /// and the materials.
+    /// If the .obj file contains multiple objects, all objects are added to the mesh, but they will not be connected.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # fn main() -> Result<(), Box<tri_mesh::mesh_builder::Error>> {
+    ///     let obj_source = std::fs::read_to_string("foo.obj").expect("Something went wrong reading the file");
+    ///     let mesh = tri_mesh::mesh_builder::MeshBuilder::<()>::new().with_obj(obj_source).build()?;
+    /// #    Ok(())
+    /// # }
+    /// ```
+    #[cfg(feature = "obj-io")]
+    pub fn with_obj_multimaterial(self, source: String, material_fn: impl FnMut(usize) -> T) -> Self
+    {
+        self.with_named_obj_multimaterial(source, "", material_fn)
+    }
+
     /// Parses the .obj file and extracts the connectivity information (indices) and positions which is used to construct a mesh when the `build` method is called.
     /// Only the object with the given name is extracted from the file.
     ///
@@ -195,11 +214,32 @@ impl<T: Clone + Default> MeshBuilder<T> {
     /// # }
     /// ```
     #[cfg(feature = "obj-io")]
-    pub fn with_named_obj(mut self, source: String, object_name: &str) -> Self
+    pub fn with_named_obj(self, source: String, object_name: &str) -> Self
+    {
+        self.with_named_obj_multimaterial(source, object_name, |_| T::default())
+    }
+
+    ///
+    /// Parses the .obj file and extracts the connectivity information (indices) and positions which is used to construct a mesh when the `build` method is called,
+    /// as well as the materials.
+    /// Only the object with the given name is extracted from the file.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # fn main() -> Result<(), Box<tri_mesh::mesh_builder::Error>> {
+    ///     let obj_source = std::fs::read_to_string("foo.obj").expect("Something went wrong reading the file");
+    ///     let mesh = tri_mesh::mesh_builder::MeshBuilder::<()>::new().with_named_obj(obj_source, "my_object").build()?;
+    /// #    Ok(())
+    /// # }
+    /// ```
+    #[cfg(feature = "obj-io")]
+    pub fn with_named_obj_multimaterial(mut self, source: String, object_name: &str, mut material_fn: impl FnMut(usize) -> T) -> Self
     {
         let objs = wavefront_obj::obj::parse(source).unwrap();
         let mut positions = Vec::new();
         let mut indices = Vec::new();
+        let mut tags = Vec::new();
 
         for obj in objs.objects.iter() { // Objects consisting of several meshes with different materials
             if &obj.name == object_name || object_name == "" {
@@ -210,13 +250,14 @@ impl<T: Clone + Default> MeshBuilder<T> {
                     positions.push(v.z);
                 });
 
-                for mesh in obj.geometry.iter() { // All meshes with different materials
+                for (mat_index, mesh) in obj.geometry.iter().enumerate() { // All meshes with different materials
                     for primitive in mesh.shapes.iter() { // All triangles with same material
                         match primitive.primitive {
                             wavefront_obj::obj::Primitive::Triangle(i0, i1, i2) => {
                                 indices.push((start_index + i0.0) as u32);
                                 indices.push((start_index + i1.0) as u32);
                                 indices.push((start_index + i2.0) as u32);
+                                tags.push(material_fn(mat_index));
                             },
                             _ => {}
                         }
