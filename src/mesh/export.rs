@@ -2,6 +2,8 @@
 
 use crate::mesh::Mesh;
 use crate::mesh::ids::*;
+use crate::mesh::vec3;
+use crate::mesh::InnerSpace;
 
 use std::collections::HashMap;
 
@@ -258,6 +260,86 @@ impl<T: Clone> Mesh<T>
             output += &format!("f{}\n", face);
         }
         output
+    }
+
+    ///
+    /// Parses the mesh into a text string that follows the .obj file format and which can then be saved into a file.
+    /// Includes materials. OBJ first, MTL second.
+    ///
+    /// # Examples
+    ///
+    /// ```no_run
+    /// # fn main() -> std::io::Result<()> {
+    /// # let mesh = tri_mesh::MeshBuilder::<()>::new().cube().build().unwrap();
+    /// // Write the mesh data to a string
+    /// let obj_source = mesh.parse_as_obj_multimaterial(|_| 0);
+    ///
+    /// // Write the string to an .obj file
+    /// std::fs::write("foo.obj", obj_source.0)?;
+    /// std::fs::write("foo.mtl", obj_source.1)?;
+    /// # Ok(())
+    /// # }
+    /// ```
+    #[cfg(feature = "obj-io")]
+    pub fn parse_as_obj_multimaterial(&self, mut material_fn: impl FnMut(T) -> usize) -> (String, String) where T: PartialEq
+    {
+        let mut output = String::from("o object\n");
+
+        let positions = self.positions_buffer();
+        for i in 0..self.num_vertices()
+        {
+            output += &format!("v {} {} {}\n", positions[i*3], positions[i*3 + 1], positions[i*3 + 2]);
+        }
+
+        let normals = self.normals_buffer();
+        for i in 0..self.num_vertices()
+        {
+            output += &format!("vn {} {} {}\n", normals[i*3], normals[i*3 + 1], normals[i*3 + 2]);
+        }
+
+        let faces = self.face_iter().collect::<Vec<_>>();
+        let buffer = self.indices_buffer();
+        let mut indices = buffer.chunks_exact(3).enumerate().collect::<Vec<_>>();
+        indices.sort_by_cached_key(|(i, _)| material_fn(self.face_tag(faces[*i])));
+        let indices = indices.into_iter().flat_map(|(_, i)| vec![i[0], i[1], i[2]]).collect::<Vec<_>>();
+
+        let mut prev = FaceID::new(0);
+        let mut materials = vec![];
+        for (i, face_id) in self.face_iter().enumerate() {
+            if i == 0 || self.face_tag(face_id) != self.face_tag(prev) {
+                let mat = material_fn(self.face_tag(face_id));
+                output += &format!("usemtl mat{}\n", mat);
+                materials.push(mat);
+            }
+
+            let mut face = String::new();
+            for j in 0..3 {
+                let index = indices[i*3 + j] + 1;
+                face += &format!(" {}//{}", index, index);
+            }
+            output += &format!("f{}\n", face);
+
+            prev = face_id;
+        }
+
+        let mut mtl = String::new();
+
+        let wheel = vec![vec3(1.0, 0.0, 0.0), vec3(1.0, 1.0, 0.0), vec3(0.0, 1.0, 0.0),
+            vec3(0.0, 1.0, 1.0), vec3(0.0, 0.0, 1.0), vec3(1.0, 0.0, 1.0), vec3(1.0, 0.0, 0.0)];
+        
+        let len = materials.len();
+        for (i, mat) in materials.into_iter().enumerate() {
+            mtl += &format!("newmtl mat{}", mat);
+            
+            let hue = i as f64 / len as f64;
+            let index = (6.0 * hue).floor() as usize;
+            let frac = 6.0 * hue - index as f64;
+            let color = wheel[index].lerp(wheel[index + 1], frac);
+            mtl += &format!("Kd {} {} {}", color.x, color.y, color.z);
+            mtl += "\n";
+        }
+
+        (output, mtl)
     }
 
     ///
