@@ -268,6 +268,7 @@ impl<T: Clone + Default> MeshBuilder<T> {
 
         self.positions = Some(positions);
         self.indices = Some(indices);
+        self.tags = Some(tags);
         self
     }
 
